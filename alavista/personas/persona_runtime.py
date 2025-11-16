@@ -29,6 +29,7 @@ class PersonaRuntime:
         search_service: SearchService,
         graph_service: GraphService,
         corpus_store: CorpusStore,
+        graph_rag_service=None,
     ):
         """Initialize the runtime.
 
@@ -37,11 +38,13 @@ class PersonaRuntime:
             search_service: Service for semantic/keyword search
             graph_service: Service for graph queries
             corpus_store: Store for corpus/document access
+            graph_rag_service: Optional GraphRAGService for graph-guided retrieval
         """
         self.persona_registry = persona_registry
         self.search_service = search_service
         self.graph_service = graph_service
         self.corpus_store = corpus_store
+        self.graph_rag_service = graph_rag_service
 
     def answer_question(
         self,
@@ -49,6 +52,7 @@ class PersonaRuntime:
         question: str,
         corpus_id: str,
         k: int = 20,
+        use_persona_manual: bool = True,
     ) -> PersonaAnswer:
         """Answer a question using a specific persona.
 
@@ -57,6 +61,7 @@ class PersonaRuntime:
             question: The user's question
             corpus_id: ID of the corpus to search
             k: Number of search results to retrieve
+            use_persona_manual: Whether to include persona manual corpus content as context
 
         Returns:
             PersonaAnswer object with answer and evidence
@@ -76,6 +81,50 @@ class PersonaRuntime:
             f"(confidence: {category.confidence:.2f})"
         )
 
+        # 2a. Use GraphRAG for structural questions if available
+        if (
+            self.graph_rag_service
+            and category.category in ["structural", "timeline", "comparison"]
+        ):
+            logger.info("Using Graph-guided RAG for structural question")
+            try:
+                graph_rag_result = self.graph_rag_service.answer(
+                    question=question,
+                    persona=persona,
+                    topic_corpus_id=corpus_id,
+                    k=k,
+                )
+
+                # Convert GraphRAGResult to PersonaAnswer
+                return PersonaAnswer(
+                    answer_text=graph_rag_result.answer_text,
+                    evidence=[
+                        {
+                            "document_id": ev.document_id,
+                            "chunk_id": ev.chunk_id,
+                            "score": ev.score,
+                            "excerpt": ev.excerpt,
+                            "metadata": ev.metadata,
+                        }
+                        for ev in graph_rag_result.evidence_docs
+                    ],
+                    graph_evidence=[
+                        {
+                            "type": ctx.context_type,
+                            "nodes": ctx.nodes,
+                            "edges": ctx.edges,
+                            "summary": ctx.summary,
+                        }
+                        for ctx in graph_rag_result.graph_context
+                    ],
+                    reasoning_summary=graph_rag_result.retrieval_summary,
+                    persona_id=persona_id,
+                    disclaimers=persona.safety_config.get("disclaimers", []),
+                )
+            except Exception as e:
+                logger.warning(f"GraphRAG failed, falling back to standard retrieval: {e}")
+                # Fall through to standard retrieval
+
         # 3. Select tools
         tools = persona.select_tools(question, category)
         logger.info(f"Selected tools: {tools}")
@@ -83,6 +132,21 @@ class PersonaRuntime:
         # 4. Run retrieval based on selected tools
         evidence = []
         graph_evidence = []
+
+        # 4a. Optionally retrieve from persona manual corpus
+        persona_manual_context = []
+        if use_persona_manual:
+            persona_manual_corpus_id = self.persona_registry.get_persona_corpus_id(persona_id)
+            if persona_manual_corpus_id:
+                logger.info(f"Retrieving context from persona manual corpus: {persona_manual_corpus_id}")
+                persona_manual_context = self._run_search(
+                    corpus_id=persona_manual_corpus_id,
+                    query=question,
+                    mode="bm25",
+                    k=3,  # Retrieve a small number of manual docs
+                )
+                if persona_manual_context:
+                    logger.info(f"Found {len(persona_manual_context)} persona manual context items")
 
         # Execute search tools
         if "semantic_search" in tools or "keyword_search" in tools:
@@ -119,6 +183,7 @@ class PersonaRuntime:
             graph_evidence=graph_evidence,
             persona=persona,
             category=category,
+            persona_manual_context=persona_manual_context,
         )
 
         # 7. Apply safety rules
@@ -283,6 +348,7 @@ class PersonaRuntime:
         graph_evidence: list[dict],
         persona: PersonaBase,
         category: Any,
+        persona_manual_context: Optional[list[dict]] = None,
     ) -> str:
         """Construct answer text from evidence.
 
@@ -295,11 +361,12 @@ class PersonaRuntime:
             graph_evidence: Graph evidence
             persona: The persona instance
             category: Question category
+            persona_manual_context: Optional context from persona manual corpus
 
         Returns:
             Answer text
         """
-        if not evidence and not graph_evidence:
+        if not evidence and not graph_evidence and not persona_manual_context:
             return (
                 f"Based on the available corpus, I could not find sufficient evidence "
                 f"to answer: '{question}'. "
@@ -307,6 +374,14 @@ class PersonaRuntime:
             )
 
         parts = []
+
+        # Include persona manual context first (best practices, etc.)
+        if persona_manual_context:
+            parts.append(
+                f"[Persona Context] Based on {len(persona_manual_context)} reference "
+                f"document(s) in the persona manual corpus: "
+                f"{persona_manual_context[0]['excerpt'][:100]}..."
+            )
 
         # Summarize document evidence
         if evidence:

@@ -23,17 +23,26 @@ class PersonaRegistry:
     """Registry for loading and managing personas."""
 
     def __init__(
-        self, ontology_service: OntologyService, allowed_tools: Optional[list[str]] = None
+        self,
+        ontology_service: OntologyService,
+        allowed_tools: Optional[list[str]] = None,
+        corpus_store=None,
+        auto_create_corpora: bool = False,
     ):
         """Initialize the registry.
 
         Args:
             ontology_service: Service for validating entity/relation types
             allowed_tools: Optional list of allowed tool names. If None, all tools allowed.
+            corpus_store: Optional CorpusStore for managing persona manual corpora
+            auto_create_corpora: Whether to auto-create persona manual corpora
         """
         self.ontology_service = ontology_service
         self.allowed_tools = allowed_tools or []
+        self.corpus_store = corpus_store
+        self.auto_create_corpora = auto_create_corpora
         self._personas: dict[str, PersonaBase] = {}
+        self._persona_corpus_ids: dict[str, str] = {}  # persona_id -> corpus_id
 
     def load_all(self, directory: Path) -> None:
         """Load all persona YAML files from a directory.
@@ -90,6 +99,10 @@ class PersonaRegistry:
 
         # Register it
         self._personas[persona.id] = persona
+
+        # Create/ensure persona manual corpus exists if enabled
+        if self.auto_create_corpora and self.corpus_store:
+            self._ensure_persona_corpus(persona.id)
 
         logger.info(f"Loaded persona: {persona.id} ({persona.name})")
         return persona
@@ -199,3 +212,57 @@ class PersonaRegistry:
             for persona_id in self.list_persona_ids()
             if self.get_persona_summary(persona_id) is not None
         ]
+
+    def _ensure_persona_corpus(self, persona_id: str) -> str:
+        """Ensure a manual corpus exists for a persona.
+
+        Args:
+            persona_id: ID of the persona
+
+        Returns:
+            Corpus ID of the persona's manual corpus
+        """
+        from alavista.core.models import Corpus
+
+        # Check if we already have this corpus cached
+        if persona_id in self._persona_corpus_ids:
+            return self._persona_corpus_ids[persona_id]
+
+        # Generate corpus ID
+        corpus_id = f"{persona_id}_manual"
+
+        # Check if corpus already exists
+        existing_corpus = self.corpus_store.get_corpus(corpus_id)
+        if existing_corpus:
+            logger.info(f"Found existing manual corpus for persona '{persona_id}': {corpus_id}")
+            self._persona_corpus_ids[persona_id] = corpus_id
+            return corpus_id
+
+        # Create new corpus
+        persona = self._personas.get(persona_id)
+        corpus_name = f"{persona.name} - Manual" if persona else f"{persona_id} - Manual"
+
+        corpus = Corpus(
+            id=corpus_id,
+            type="persona_manual",
+            name=corpus_name,
+            description=f"Manual knowledge base for {persona_id} persona",
+            metadata={"persona_id": persona_id},
+        )
+
+        self.corpus_store.create_corpus(corpus)
+        self._persona_corpus_ids[persona_id] = corpus_id
+
+        logger.info(f"Created manual corpus for persona '{persona_id}': {corpus_id}")
+        return corpus_id
+
+    def get_persona_corpus_id(self, persona_id: str) -> Optional[str]:
+        """Get the manual corpus ID for a persona.
+
+        Args:
+            persona_id: ID of the persona
+
+        Returns:
+            Corpus ID or None if not found
+        """
+        return self._persona_corpus_ids.get(persona_id)

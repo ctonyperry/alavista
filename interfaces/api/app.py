@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from alavista.core.container import Container
 from interfaces.api.routes import (
     corpora_router,
+    graph_rag_router,
     graph_router,
     ingest_router,
     ontology_router,
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(search_router, prefix="/api/v1")
     app.include_router(personas_router, prefix="/api/v1")
     app.include_router(graph_router, prefix="/api/v1")
+    app.include_router(graph_rag_router, prefix="/api/v1")
     app.include_router(ontology_router, prefix="/api/v1")
     app.include_router(ingest_router, prefix="/api/v1")
 

@@ -17,6 +17,7 @@ from alavista.vector import FaissVectorSearchService, InMemoryVectorSearchServic
 from alavista.graph import GraphService, SQLiteGraphStore
 from alavista.ontology.service import OntologyService, OntologyError
 from alavista.personas import PersonaRegistry, PersonaRuntime
+from alavista.rag import GraphRAGService
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -116,6 +117,7 @@ class Container:
         max_chunk_size: int = 1500,
         embedding_service=None,
         vector_search_service=None,
+        persona_registry=None,
     ) -> IngestionService:
         """
         Create an IngestionService instance.
@@ -124,17 +126,22 @@ class Container:
             corpus_store: Corpus store instance (uses singleton if not provided)
             min_chunk_size: Minimum chunk size in characters
             max_chunk_size: Maximum chunk size in characters
+            embedding_service: Optional embedding service
+            vector_search_service: Optional vector search service
+            persona_registry: Optional PersonaRegistry for persona-specific ingestion
 
         Returns:
             IngestionService: Ingestion service instance
         """
         corpus_store = corpus_store or Container.get_corpus_store()
+        persona_registry = persona_registry or Container.get_persona_registry()
         return IngestionService(
             corpus_store=corpus_store,
             min_chunk_size=min_chunk_size,
             max_chunk_size=max_chunk_size,
             embedding_service=embedding_service,
             vector_search_service=vector_search_service,
+            persona_registry=persona_registry,
         )
 
     @staticmethod
@@ -271,9 +278,48 @@ class Container:
         return Container.create_search_service()
 
     @staticmethod
+    def create_graph_rag_service(
+        graph_service: GraphService | None = None,
+        search_service: SearchService | None = None,
+        corpus_store: SQLiteCorpusStore | None = None,
+    ) -> GraphRAGService:
+        """
+        Create a GraphRAGService instance.
+
+        Args:
+            graph_service: Graph service instance (uses singleton if not provided)
+            search_service: Search service instance (uses singleton if not provided)
+            corpus_store: Corpus store instance (uses singleton if not provided)
+
+        Returns:
+            GraphRAGService: Graph-guided RAG service instance
+        """
+        graph_service = graph_service or Container.get_graph_service()
+        search_service = search_service or Container.get_search_service()
+        corpus_store = corpus_store or Container.get_corpus_store()
+
+        return GraphRAGService(
+            graph_service=graph_service,
+            search_service=search_service,
+            corpus_store=corpus_store,
+        )
+
+    @staticmethod
+    @lru_cache
+    def get_graph_rag_service() -> GraphRAGService:
+        """
+        Get singleton GraphRAGService instance.
+
+        Returns:
+            GraphRAGService: Graph-guided RAG service singleton
+        """
+        return Container.create_graph_rag_service()
+
+    @staticmethod
     def create_persona_registry(
         ontology_service: OntologyService | None = None,
         settings: Settings | None = None,
+        corpus_store: SQLiteCorpusStore | None = None,
     ) -> PersonaRegistry:
         """
         Create a PersonaRegistry instance.
@@ -281,12 +327,14 @@ class Container:
         Args:
             ontology_service: Ontology service for validation (uses singleton if not provided)
             settings: Settings for locating persona profiles
+            corpus_store: Corpus store for persona manual corpora (uses singleton if not provided)
 
         Returns:
             PersonaRegistry: Persona registry instance
         """
         ontology_service = ontology_service or Container.get_ontology_service()
         settings = settings or Container.get_settings()
+        corpus_store = corpus_store or Container.get_corpus_store()
 
         # Define allowed tools
         allowed_tools = [
@@ -300,6 +348,8 @@ class Container:
         registry = PersonaRegistry(
             ontology_service=ontology_service,
             allowed_tools=allowed_tools,
+            corpus_store=corpus_store,
+            auto_create_corpora=settings.auto_create_persona_corpora,
         )
 
         # Load personas from packaged profiles
@@ -329,6 +379,7 @@ class Container:
         search_service: SearchService | None = None,
         graph_service: GraphService | None = None,
         corpus_store: SQLiteCorpusStore | None = None,
+        graph_rag_service: GraphRAGService | None = None,
     ) -> PersonaRuntime:
         """
         Create a PersonaRuntime instance.
@@ -338,6 +389,7 @@ class Container:
             search_service: Search service (uses singleton if not provided)
             graph_service: Graph service (uses singleton if not provided)
             corpus_store: Corpus store (uses singleton if not provided)
+            graph_rag_service: Graph-guided RAG service (uses singleton if not provided)
 
         Returns:
             PersonaRuntime: Persona runtime instance
@@ -346,12 +398,14 @@ class Container:
         search_service = search_service or Container.get_search_service()
         graph_service = graph_service or Container.get_graph_service()
         corpus_store = corpus_store or Container.get_corpus_store()
+        graph_rag_service = graph_rag_service or Container.get_graph_rag_service()
 
         return PersonaRuntime(
             persona_registry=persona_registry,
             search_service=search_service,
             graph_service=graph_service,
             corpus_store=corpus_store,
+            graph_rag_service=graph_rag_service,
         )
 
     @staticmethod

@@ -253,3 +253,82 @@ class IngestResponse(BaseModel):
 
     document_id: str
     chunk_count: int
+
+
+# ============================================================================
+# Persona Ingestion Schemas
+# ============================================================================
+
+
+class PersonaIngestTextRequest(BaseModel):
+    """Request to ingest text into persona manual corpus."""
+
+    text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class PersonaIngestURLRequest(BaseModel):
+    """Request to ingest from URL into persona manual corpus."""
+
+    url: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class PersonaIngestFileRequest(BaseModel):
+    """Request to ingest a file into persona manual corpus."""
+
+    file_path: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class PersonaIngestResponse(BaseModel):
+    """Response from persona ingestion."""
+
+    document_id: str
+    chunk_count: int
+    persona_id: str
+    corpus_id: str
+
+
+# ============================================================================
+# Graph RAG Schemas
+# ============================================================================
+
+
+class GraphRAGRequest(BaseModel):
+    """Request for graph-guided RAG."""
+
+    question: str
+    persona_id: str
+    corpus_id: str | None = None
+    k: int = Field(default=20, ge=1, le=100)
+
+
+class GraphRAGEvidenceItem(BaseModel):
+    """Evidence item from graph RAG."""
+
+    document_id: str
+    chunk_id: str
+    score: float
+    excerpt: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphRAGContext(BaseModel):
+    """Graph context from graph RAG."""
+
+    context_type: str
+    nodes: list[dict[str, Any]] = Field(default_factory=list)
+    edges: list[dict[str, Any]] = Field(default_factory=list)
+    summary: str = ""
+
+
+class GraphRAGResponse(BaseModel):
+    """Response from graph-guided RAG."""
+
+    answer_text: str
+    evidence_docs: list[GraphRAGEvidenceItem] = Field(default_factory=list)
+    graph_context: list[GraphRAGContext] = Field(default_factory=list)
+    retrieval_summary: str
+    persona_id: str | None = None
+    timestamp: datetime

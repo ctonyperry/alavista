@@ -14,6 +14,7 @@ from interfaces.mcp import (
     graph_find_entity_tool,
     graph_neighbors_tool,
     graph_paths_tool,
+    graph_rag_tool,
     ingest_file_tool,
     ingest_text_tool,
     keyword_search_tool,
@@ -22,6 +23,7 @@ from interfaces.mcp import (
     ontology_describe_type_tool,
     ontology_list_entities_tool,
     ontology_list_relations_tool,
+    persona_ingest_resource_tool,
     persona_query_tool,
     semantic_search_tool,
 )
@@ -55,6 +57,7 @@ class MCPServer:
         # Persona tools
         self.tools["alavista.list_personas"] = list_personas_tool
         self.tools["alavista.persona_query"] = persona_query_tool
+        self.tools["alavista.persona_ingest_resource"] = persona_ingest_resource_tool
 
         # Ontology tools
         self.tools["alavista.ontology_list_entities"] = ontology_list_entities_tool
@@ -64,6 +67,9 @@ class MCPServer:
         # Ingestion tools
         self.tools["alavista.ingest_text"] = ingest_text_tool
         self.tools["alavista.ingest_file"] = ingest_file_tool
+
+        # Graph RAG tools
+        self.tools["alavista.graph_rag"] = graph_rag_tool
 
         logger.info(f"Registered {len(self.tools)} MCP tools")
 
@@ -169,6 +175,17 @@ class MCPServer:
                     "k": "integer (optional, default 20)",
                 },
             },
+            "alavista.persona_ingest_resource": {
+                "description": "Ingest a resource (text, file, or URL) into a persona's manual corpus",
+                "args": {
+                    "persona_id": "string (required)",
+                    "resource_type": "string (required) - 'text', 'file', or 'url'",
+                    "content": "string (required for resource_type='text')",
+                    "file_path": "string (required for resource_type='file')",
+                    "url": "string (required for resource_type='url')",
+                    "metadata": "object (optional)",
+                },
+            },
             "alavista.ontology_list_entities": {
                 "description": "List all entity types in the ontology",
                 "args": {},
@@ -198,6 +215,15 @@ class MCPServer:
                     "corpus_id": "string (required)",
                     "file_path": "string (required)",
                     "metadata": "object (optional)",
+                },
+            },
+            "alavista.graph_rag": {
+                "description": "Execute graph-guided RAG to answer a question",
+                "args": {
+                    "question": "string (required)",
+                    "persona_id": "string (required)",
+                    "corpus_id": "string (optional)",
+                    "k": "integer (optional, default 20)",
                 },
             },
         }

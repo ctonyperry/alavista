@@ -47,6 +47,7 @@ class IngestionService:
         max_chunk_size: int = 1500,
         embedding_service: EmbeddingServiceProtocol | None = None,
         vector_search_service: VectorSearchService | None = None,
+        persona_registry=None,
     ):
         """
         Initialize the ingestion service.
@@ -57,12 +58,14 @@ class IngestionService:
             max_chunk_size: Maximum chunk size in characters
             embedding_service: Optional embedding backend for chunk vectors
             vector_search_service: Optional vector index backend
+            persona_registry: Optional PersonaRegistry for persona-specific ingestion
         """
         self.corpus_store = corpus_store
         self.min_chunk_size = min_chunk_size
         self.max_chunk_size = max_chunk_size
         self.embedding_service = embedding_service
         self.vector_search_service = vector_search_service
+        self.persona_registry = persona_registry
 
     def ingest_text(
         self,
@@ -218,6 +221,123 @@ class IngestionService:
             "URL ingestion not yet implemented. "
             "This feature will be added in a future phase."
         )
+
+    def ingest_persona_text(
+        self,
+        persona_id: str,
+        text: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> tuple[Document, list[Chunk]]:
+        """
+        Ingest plain text into a persona's manual corpus.
+
+        Args:
+            persona_id: ID of the persona
+            text: Text content to ingest
+            metadata: Optional metadata
+
+        Returns:
+            Tuple of (Document, list of Chunks)
+
+        Raises:
+            IngestionError: If PersonaRegistry not configured or persona not found
+        """
+        if not self.persona_registry:
+            raise IngestionError("PersonaRegistry not configured for persona ingestion")
+
+        # Get persona's manual corpus ID
+        corpus_id = self.persona_registry.get_persona_corpus_id(persona_id)
+        if not corpus_id:
+            raise IngestionError(
+                f"No manual corpus found for persona '{persona_id}'. "
+                "Ensure auto_create_persona_corpora is enabled."
+            )
+
+        # Add persona_id to metadata
+        persona_metadata = metadata or {}
+        persona_metadata["persona_id"] = persona_id
+        persona_metadata.setdefault("source_type", "persona_manual")
+
+        # Delegate to standard ingestion
+        return self.ingest_text(corpus_id, text, persona_metadata)
+
+    def ingest_persona_file(
+        self,
+        persona_id: str,
+        file_path: Path | str,
+        metadata: dict[str, Any] | None = None,
+    ) -> tuple[Document, list[Chunk]]:
+        """
+        Ingest a file into a persona's manual corpus.
+
+        Args:
+            persona_id: ID of the persona
+            file_path: Path to the file
+            metadata: Optional metadata
+
+        Returns:
+            Tuple of (Document, list of Chunks)
+
+        Raises:
+            IngestionError: If PersonaRegistry not configured or persona not found
+        """
+        if not self.persona_registry:
+            raise IngestionError("PersonaRegistry not configured for persona ingestion")
+
+        # Get persona's manual corpus ID
+        corpus_id = self.persona_registry.get_persona_corpus_id(persona_id)
+        if not corpus_id:
+            raise IngestionError(
+                f"No manual corpus found for persona '{persona_id}'. "
+                "Ensure auto_create_persona_corpora is enabled."
+            )
+
+        # Add persona_id to metadata
+        persona_metadata = metadata or {}
+        persona_metadata["persona_id"] = persona_id
+        persona_metadata.setdefault("source_type", "persona_manual")
+
+        # Delegate to standard ingestion
+        return self.ingest_file(corpus_id, file_path, persona_metadata)
+
+    def ingest_persona_url(
+        self,
+        persona_id: str,
+        url: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> tuple[Document, list[Chunk]]:
+        """
+        Ingest content from a URL into a persona's manual corpus.
+
+        Args:
+            persona_id: ID of the persona
+            url: URL to fetch
+            metadata: Optional metadata
+
+        Returns:
+            Tuple of (Document, list of Chunks)
+
+        Raises:
+            IngestionError: If PersonaRegistry not configured or persona not found
+        """
+        if not self.persona_registry:
+            raise IngestionError("PersonaRegistry not configured for persona ingestion")
+
+        # Get persona's manual corpus ID
+        corpus_id = self.persona_registry.get_persona_corpus_id(persona_id)
+        if not corpus_id:
+            raise IngestionError(
+                f"No manual corpus found for persona '{persona_id}'. "
+                "Ensure auto_create_persona_corpora is enabled."
+            )
+
+        # Add persona_id to metadata
+        persona_metadata = metadata or {}
+        persona_metadata["persona_id"] = persona_id
+        persona_metadata.setdefault("source_type", "persona_manual")
+
+        # Delegate to standard ingestion
+        return self.ingest_url(corpus_id, url, persona_metadata)
 
     def _compute_hash(self, text: str) -> str:
         """
