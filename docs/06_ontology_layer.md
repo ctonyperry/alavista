@@ -1,7 +1,7 @@
 # Alavista – Ontology Layer Specification (v0.1 → forward-compatible)
 
 The ontology is the backbone that keeps Alavista disciplined.  
-It defines *what kinds of things exist*, *what kinds of relationships are legitimate*, and *how personas reason safely and consistently across the system*.
+It defines *what kinds of things exist*, *what kinds of relationships are legitimate*, and *how analysis profiles reason safely and consistently across the system*.
 
 This layer is intentionally minimal now, but engineered for long-term expansion (v0.2+).
 
@@ -12,19 +12,19 @@ This layer is intentionally minimal now, but engineered for long-term expansion 
 ### What the ontology provides:
 
 1. **A shared vocabulary**  
-   All subsystems — extraction, graph, personas, LLM agents, RAG — speak the same domain language.
+   All subsystems — extraction, graph, analysis profiles, LLM agents, RAG — speak the same domain language.
 
 2. **Typed constraints**  
    Nodes and edges have valid combinations, preventing speculative graph edges.
 
-3. **Persona grounding**  
-   Each persona is restricted to a curated subset of entity types and relations.
+3. **Analysis profile grounding**  
+   Each analysis profile is restricted to a curated subset of entity types and relations.
 
 4. **Safer LLM behavior**  
    The ontology limits hallucination by explicitly defining what *can* and *cannot* exist.
 
 5. **Long-term extensibility**  
-   Every new feature (graph ops, persona workflows, ingestion rules) attaches cleanly to the ontology.
+   Every new feature (graph ops, analysis profile workflows, ingestion rules) attaches cleanly to the ontology.
 
 ---
 
@@ -178,9 +178,9 @@ GraphStore uses these types to:
 
 ---
 
-## 4.3 Personas
+## 4.3 Analysis Profiles
 
-Each persona has:
+Each analysis profile has:
 
 1. **Entity type whitelist**  
 2. **Relation type whitelist**  
@@ -246,7 +246,7 @@ class OntologyService:
 # 6. MCP Tools for Ontology
 
 1. `ontology_describe_type(type)`  
-   Returns canonical definition + aliases + persona relevance.
+   Returns canonical definition + aliases + analysis profile relevance.
 
 2. `ontology_list_relations(entity_id)`  
    Returns valid edges that can originate from an entity of this type.
@@ -268,7 +268,7 @@ Unit Tests:
 Integration Tests:
 - extraction uses ontology  
 - graph rejects invalid edges  
-- personas select correct relations  
+- analysis profiles select correct relations  
 - ontology tools callable through MCP  
 
 ---

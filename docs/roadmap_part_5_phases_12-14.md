@@ -465,7 +465,7 @@ Provide:
   - Run:
     - basic search.
     - graph find → neighbors.
-    - persona query → answer with citations.
+    - analysis profile query → answer with citations.
 
 This turns the repo from “promising” into **immediately useful**.
 

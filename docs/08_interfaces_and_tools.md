@@ -37,7 +37,7 @@ interfaces/
     corpora_tools.py
     ingest_tools.py
     search_tools.py
-    persona_tools.py
+    persona_tools.py          # Analysis profile tools (file to be renamed)
     graph_tools.py
     ontology_tools.py
 ```
@@ -285,7 +285,7 @@ FastAPI TestClient for HTTP:
 - corpora CRUD  
 - ingest text/url/file  
 - search  
-- persona_qna  
+- persona_qna (analysis profile Q&A routes)
 - graph  
 - ontology  
 
@@ -301,7 +301,7 @@ MCP unit tests:
 
 Interfaces layer is complete when:
 
-- HTTP API routes for corpora, ingest, search, analysis profiles, persona_qna, graph, ontology implemented  
+- HTTP API routes for corpora, ingest, search, analysis profiles, analysis profile Q&A, graph, ontology implemented  
 - MCP tools for all major capabilities implemented  
 - All mapping functions use core services without embedding logic  
 - 80%+ test coverage for both HTTP and MCP surfaces  

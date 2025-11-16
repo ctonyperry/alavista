@@ -512,7 +512,7 @@ class PromptManager:
 
     def build_persona_planner_prompt(
         self,
-        analysis profile,
+        persona,  # Conceptually an analysis profile
         question: str,
         manual_snippets: list[str],
         ontology_summary: str | None = None,
@@ -521,7 +521,7 @@ class PromptManager:
 
     def build_research_qa_prompt(
         self,
-        analysis profile,
+        persona,  # Conceptually an analysis profile
         question: str,
         evidence_snippets: list[str],
         ontology_summary: str | None = None,
