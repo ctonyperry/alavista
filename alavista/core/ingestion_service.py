@@ -2,17 +2,23 @@
 IngestionService for processing and storing documents.
 
 This module handles the ingestion of documents from various sources (text, files, URLs),
-including normalization, deduplication, and chunking.
+including normalization, deduplication, chunking, and (optionally) embedding + vector indexing.
 """
 
+import asyncio
 import hashlib
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from alavista.core.chunking import chunk_text, normalize_text
 from alavista.core.corpus_store import CorpusStore
 from alavista.core.models import Chunk, Document
+from alavista.vector import VectorSearchService
+
+
+class EmbeddingServiceProtocol(Protocol):
+    async def embed_texts(self, texts: list[str]) -> list[list[float]]: ...
 
 
 class IngestionError(Exception):
@@ -31,8 +37,7 @@ class IngestionService:
     """
     Service for ingesting documents from various sources.
 
-    Handles text normalization, deduplication, chunking, and storage.
-    Future phases will add embedding and indexing integration.
+    Handles text normalization, deduplication, chunking, and optional embedding + vector indexing.
     """
 
     def __init__(
@@ -40,6 +45,8 @@ class IngestionService:
         corpus_store: CorpusStore,
         min_chunk_size: int = 500,
         max_chunk_size: int = 1500,
+        embedding_service: EmbeddingServiceProtocol | None = None,
+        vector_search_service: VectorSearchService | None = None,
     ):
         """
         Initialize the ingestion service.
@@ -48,10 +55,14 @@ class IngestionService:
             corpus_store: Storage backend for corpora and documents
             min_chunk_size: Minimum chunk size in characters
             max_chunk_size: Maximum chunk size in characters
+            embedding_service: Optional embedding backend for chunk vectors
+            vector_search_service: Optional vector index backend
         """
         self.corpus_store = corpus_store
         self.min_chunk_size = min_chunk_size
         self.max_chunk_size = max_chunk_size
+        self.embedding_service = embedding_service
+        self.vector_search_service = vector_search_service
 
     def ingest_text(
         self,
@@ -110,6 +121,9 @@ class IngestionService:
 
         # Create chunks
         chunks = self._create_chunks(document)
+
+        # Optionally embed and index
+        self._embed_and_index_chunks(document.corpus_id, chunks)
 
         return document, chunks
 
@@ -250,3 +264,25 @@ class IngestionService:
             chunks.append(chunk)
 
         return chunks
+
+    def _embed_and_index_chunks(self, corpus_id: str, chunks: list[Chunk]) -> None:
+        """Embed and index chunks if services are configured."""
+        if not self.embedding_service or not self.vector_search_service:
+            return
+        texts = [chunk.text for chunk in chunks]
+        try:
+            vectors = self._run_coro(self.embedding_service.embed_texts(texts))
+            items = [
+                (chunk.document_id, chunk.id, vectors[i]) for i, chunk in enumerate(chunks)
+            ]
+            self._run_coro(self.vector_search_service.index_embeddings(corpus_id, items))
+        except Exception as e:
+            raise IngestionError("Failed to embed or index document chunks") from e
+
+    def _run_coro(self, coro):
+        """Run an async coroutine from sync context."""
+        try:
+            loop = asyncio.get_running_loop()
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        except RuntimeError:
+            return asyncio.run(coro)

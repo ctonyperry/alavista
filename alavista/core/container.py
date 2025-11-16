@@ -6,12 +6,16 @@ Uses simple factory pattern with optional singleton behavior for stateful servic
 """
 
 from functools import lru_cache
+from pathlib import Path
 
 from alavista.core.config import Settings, get_settings
 from alavista.core.corpus_store import SQLiteCorpusStore
 from alavista.core.ingestion_service import IngestionService
 from alavista.core.logging import get_logger
 from alavista.search.search_service import SearchService
+from alavista.vector import FaissVectorSearchService, InMemoryVectorSearchService, VectorSearchService, _HAS_FAISS
+from alavista.graph import GraphService, SQLiteGraphStore
+from alavista.ontology.service import OntologyService, OntologyError
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -109,6 +113,8 @@ class Container:
         corpus_store: SQLiteCorpusStore | None = None,
         min_chunk_size: int = 500,
         max_chunk_size: int = 1500,
+        embedding_service=None,
+        vector_search_service=None,
     ) -> IngestionService:
         """
         Create an IngestionService instance.
@@ -126,6 +132,8 @@ class Container:
             corpus_store=corpus_store,
             min_chunk_size=min_chunk_size,
             max_chunk_size=max_chunk_size,
+            embedding_service=embedding_service,
+            vector_search_service=vector_search_service,
         )
 
     @staticmethod
@@ -140,11 +148,93 @@ class Container:
         return Container.create_ingestion_service()
 
     @staticmethod
+    def create_vector_search_service(
+        settings: Settings | None = None,
+    ) -> VectorSearchService:
+        """
+        Create a VectorSearchService based on settings.
+
+        Args:
+            settings: Settings instance (uses singleton if not provided)
+
+        Returns:
+            VectorSearchService: Configured vector search service
+        """
+        settings = settings or Container.get_settings()
+        backend = settings.vector_backend.lower()
+        if backend == "faiss":
+            if not _HAS_FAISS:
+                raise RuntimeError("faiss backend requested but faiss is not installed")
+            return FaissVectorSearchService(
+                root_dir=settings.vector_index_dir,
+                normalize=settings.vector_normalize,
+            )
+        if backend == "memory":
+            return InMemoryVectorSearchService(normalize=settings.vector_normalize)
+        raise ValueError(f"Unsupported vector backend: {backend}")
+
+    @staticmethod
+    @lru_cache
+    def get_vector_search_service() -> VectorSearchService:
+        """
+        Get singleton VectorSearchService instance.
+
+        Returns:
+            VectorSearchService: Vector search service singleton
+        """
+        return Container.create_vector_search_service()
+
+    @staticmethod
+    def create_graph_store(settings: Settings | None = None) -> SQLiteGraphStore:
+        """
+        Create a GraphStore instance.
+        """
+        settings = settings or Container.get_settings()
+        db_path = settings.data_dir / "graph.db"
+        return SQLiteGraphStore(db_path=db_path)
+
+    @staticmethod
+    @lru_cache
+    def get_graph_store() -> SQLiteGraphStore:
+        return Container.create_graph_store()
+
+    @staticmethod
+    def create_ontology_service(settings: Settings | None = None) -> OntologyService:
+        settings = settings or Container.get_settings()
+        ontology_path = settings.data_dir / "ontology_v0.1.json"
+        if not ontology_path.exists():
+            # allow fallback to packaged ontology
+            packaged = Path(__file__).resolve().parent.parent / "ontology" / "ontology_v0.1.json"
+            ontology_path = packaged
+        return OntologyService(ontology_path)
+
+    @staticmethod
+    @lru_cache
+    def get_ontology_service() -> OntologyService:
+        return Container.create_ontology_service()
+
+    @staticmethod
+    def create_graph_service(
+        graph_store: SQLiteGraphStore | None = None,
+        ontology_service: OntologyService | None = None,
+    ) -> GraphService:
+        graph_store = graph_store or Container.get_graph_store()
+        ontology_service = ontology_service or Container.get_ontology_service()
+        return GraphService(store=graph_store, ontology=ontology_service)
+
+    @staticmethod
+    @lru_cache
+    def get_graph_service() -> GraphService:
+        return Container.create_graph_service()
+
+    @staticmethod
     def create_search_service(
         corpus_store: SQLiteCorpusStore | None = None,
         k1: float = 1.5,
         b: float = 0.75,
         remove_stopwords: bool = False,
+        vector_search_service=None,
+        embedding_service=None,
     ) -> SearchService:
         """
         Create a SearchService instance.
@@ -164,6 +254,8 @@ class Container:
             k1=k1,
             b=b,
             remove_stopwords=remove_stopwords,
+            vector_search_service=vector_search_service,
+            embedding_service=embedding_service,
         )
 
     @staticmethod

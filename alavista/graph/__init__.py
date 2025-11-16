@@ -9,3 +9,17 @@ This module implements the typed entity-relationship graph layer:
 - Graph querying and traversal
 - Confidence scoring for relationships
 """
+
+from alavista.graph.graph_service import GraphService
+from alavista.graph.graph_store import GraphStoreProtocol, SQLiteGraphStore
+from alavista.graph.models import GraphEdge, GraphNeighborhood, GraphNode, GraphPath
+
+__all__ = [
+    "GraphService",
+    "GraphStoreProtocol",
+    "SQLiteGraphStore",
+    "GraphNode",
+    "GraphEdge",
+    "GraphNeighborhood",
+    "GraphPath",
+]

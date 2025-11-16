@@ -2,17 +2,28 @@
 Tests for IngestionService.
 """
 
+import asyncio
 from pathlib import Path
 
 import pytest
 
 from alavista.core.corpus_store import SQLiteCorpusStore
+from alavista.core.embeddings import DeterministicFallbackEmbeddingService
 from alavista.core.ingestion_service import (
     IngestionError,
     IngestionService,
     UnsupportedFormatError,
 )
 from alavista.core.models import Corpus
+from alavista.vector import InMemoryVectorSearchService
+
+
+def _run(coro):
+    try:
+        loop = asyncio.get_running_loop()
+        return asyncio.run_coroutine_threadsafe(coro, loop).result()
+    except RuntimeError:
+        return asyncio.run(coro)
 
 
 class TestIngestionService:
@@ -293,3 +304,22 @@ class TestIngestionService:
 
         assert doc.text  # Should have content
         assert len(chunks) >= 1
+
+    def test_ingest_with_embeddings_and_vector_index(
+        self, store: SQLiteCorpusStore, corpus: Corpus
+    ):
+        """Ensure ingestion can embed and index chunks when services provided."""
+        embed_svc = DeterministicFallbackEmbeddingService(dim=8)
+        vector_svc = InMemoryVectorSearchService()
+        service = IngestionService(
+            corpus_store=store,
+            embedding_service=embed_svc,
+            vector_search_service=vector_svc,
+        )
+
+        doc, chunks = service.ingest_text(corpus.id, "Vector search ready content.")
+        assert doc.id is not None
+        assert len(chunks) == 1
+
+        hits = _run(vector_svc.search(corpus.id, _run(embed_svc.embed_texts(["Vector search"]))[0], k=1))
+        assert hits

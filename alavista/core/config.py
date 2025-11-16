@@ -47,10 +47,23 @@ class Settings(BaseSettings):
         default="llama3.1:8b", description="Default Ollama model for text generation"
     )
 
+    # Vector search configuration
+    vector_backend: str = Field(
+        default="faiss",
+        description="Vector backend to use (faiss | memory)",
+    )
+    vector_index_dir: Path = Field(
+        default=Path("./data/vector_index"), description="Directory for FAISS index files"
+    )
+    vector_normalize: bool = Field(
+        default=True, description="Whether to L2-normalize embeddings before indexing/search"
+    )
+
     def __init__(self, **kwargs):
         """Initialize settings and ensure data directory exists."""
         super().__init__(**kwargs)
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.vector_index_dir.mkdir(parents=True, exist_ok=True)
 
 
 @lru_cache

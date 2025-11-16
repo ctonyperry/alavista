@@ -8,3 +8,7 @@ This module defines and manages the domain ontology:
 - Semantic constraints and inference rules
 - Version management for ontology evolution
 """
+
+from alavista.ontology.service import OntologyError, OntologyService
+
+__all__ = ["OntologyError", "OntologyService"]

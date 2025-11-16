@@ -1,0 +1,20 @@
+{
+  "version": "0.1",
+  "entities": {
+    "Person": { "description": "An individual human.", "aliases": ["Individual"] },
+    "Organization": { "description": "A company or institution.", "aliases": ["Org"] },
+    "Document": { "description": "A text document within a corpus.", "aliases": ["Doc"] }
+  },
+  "relations": {
+    "APPEARS_IN": {
+      "description": "Entity explicitly appears in a document.",
+      "domain": ["Person", "Organization"],
+      "range": ["Document"]
+    },
+    "MENTIONED_WITH": {
+      "description": "Two entities co-mentioned in text.",
+      "domain": ["Person", "Organization"],
+      "range": ["Person", "Organization"]
+    }
+  }
+}
