@@ -3,7 +3,7 @@
 
 This file covers:
 
-- **Phase 6** – Persona Framework (PersonaRuntime + Profiles)
+- **Phase 6** – Analysis Profile Framework (`PersonaRuntime` + Profile Definitions)
 - **Phase 7** – MCP Server v1
 - **Phase 8** – HTTP API (FastAPI)
 
@@ -11,47 +11,47 @@ It assumes Phases 0–5 are complete: ingestion, BM25, embeddings, hybrid search
 
 ---
 
-## Phase 6 — Persona Framework (PersonaRuntime + Profiles)
+## Phase 6 — Analysis Profile Framework (`PersonaRuntime` + Profile Definitions)
 
 ### Goals
 
-- Implement a **Persona Framework** that turns Alavista into a set of domain experts, not just a generic search box.
+- Implement a **Analysis Profile Framework** that turns Alavista into a set of domain experts, not just a generic search box.
 - Each persona:
   - Has a scoped view of ontology (entity + relation whitelists).
   - Uses a specific combination of tools (search, graph, ingestion).
   - Operates with strict safety rules (no speculation, provenance required).
-  - Optionally has its own **persona corpus** (best practices, methods, examples).
-- Build a **PersonaRuntime** that:
-  - Takes a question + persona.
+  - Optionally has its own **analysis profile corpus** (best practices, methods, examples).
+- Build a **`PersonaRuntime`** (to be renamed `AnalysisProfileRuntime`) that:
+  - Takes a question + analysis profile.
   - Plans a reasoning strategy.
   - Executes calls against core services.
   - Returns a structured answer plus evidence.
 
 ### Design Principles
 
-- Personas are **configuration + policy**, not custom code for each.
-- PersonaRuntime is **stateless per call** (state lives in question context, not long-running sessions).
-- All persona logic must remain **observable and explainable**.
+- Analysis Profiles are **configuration + policy**, not custom code for each.
+- `PersonaRuntime` is **stateless per call** (state lives in question context, not long-running sessions).
+- All analysis profile logic must remain **observable and explainable**.
 
 ---
 
-### 6.1 Persona Model & Profiles
+### 6.1 Analysis Profile Model & Profile Definitions
 
-Directory:
+Directory (current implementation, to be renamed):
 
 ```
-core/personas/
-  persona_base.py
-  persona_registry.py
-  persona_runtime.py
-  persona_profiles/
+core/personas/                    # To be renamed to core/analysis_profiles/
+  persona_base.py                # To be renamed to analysis_profile_base.py
+  persona_registry.py            # To be renamed to analysis_profile_registry.py
+  persona_runtime.py             # To be renamed to analysis_profile_runtime.py
+  persona_profiles/              # To be renamed to profile_definitions/
     financial_forensics.yaml
     flight_analysis.yaml
     legal_review.yaml
     general_investigator.yaml
 ```
 
-Personas defined in YAML as previously specced. Example profile:
+Analysis Profiles defined in YAML as previously specced. Example profile:
 
 ```yaml
 name: "General Investigator"
@@ -203,7 +203,7 @@ Module: `core/personas/persona_runtime.py`
 
 Responsibilities:
 
-- Execute one **persona-scoped reasoning cycle**:
+- Execute one **analysis profile-scoped reasoning cycle**:
 
 Inputs:
 
@@ -419,7 +419,7 @@ TDD:
   - ingest resources
   - run search
   - inspect graph
-  - query personas
+  - query analysis profiles
   - introspect ontology
 - Tools have tests verifying input/output contracts.
 
@@ -492,11 +492,11 @@ TDD:
 
 ---
 
-#### 8.2.3 Personas
+#### 8.2.3 Analysis Profiles
 
-`routes/personas.py`:
+`routes/analysis profiles.py`:
 
-- `GET /api/v1/personas`
+- `GET /api/v1/analysis profiles`
   - Returns a list of persona summaries: `{id, name, description}`.
 
 - `GET /api/v1/personas/{persona_id}`
@@ -511,7 +511,7 @@ TDD:
 
 TDD:
 
-- Ensure `GET /personas` returns non-empty list after registry init.
+- Ensure `GET /analysis profiles` returns non-empty list after registry init.
 - Q&A route returns shape that matches `PersonaAnswerResponse`.
 
 ---
