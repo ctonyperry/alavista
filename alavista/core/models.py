@@ -71,3 +71,20 @@ class Chunk(BaseModel):
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Chunk-specific metadata"
     )
+
+
+class SearchResult(BaseModel):
+    """
+    Represents a single search result from BM25 or other search methods.
+
+    Contains the matched chunk/document, its relevance score, an excerpt for display,
+    and associated metadata.
+    """
+
+    doc_id: str = Field(..., description="ID of the matched document")
+    chunk_id: str = Field(..., description="ID of the matched chunk")
+    score: float = Field(..., description="Relevance score (higher is better)")
+    excerpt: str = Field(..., description="Text excerpt from the matched chunk")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Document metadata (source_type, source_path, etc.)"
+    )
