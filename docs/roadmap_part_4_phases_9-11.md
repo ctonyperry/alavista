@@ -4,7 +4,7 @@
 This file covers:
 
 - **Phase 9** – Admin & Developer UX Tools (CLI + Config)
-- **Phase 10** – Persona Resource Ingestion (MCP + HTTP)
+- **Phase 10** – Analysis Profile Resource Ingestion (MCP + HTTP)
 - **Phase 11** – Graph-Guided RAG
 
 It assumes Phases 0–8 are complete and stable.
@@ -114,7 +114,7 @@ alavista = "cli.main:run"
   - Creates a new corpus.
   - Options:
     - `--id` (optional)
-    - `--type` (persona_manual | research | global)
+    - `--type` (persona_manual  # To be renamed profile_manual | research | global)
 
 TDD:
 
@@ -189,34 +189,34 @@ TDD:
 
 ---
 
-## Phase 10 — Persona Resource Ingestion (MCP + HTTP)
+## Phase 10 — Analysis Profile Resource Ingestion (MCP + HTTP)
 
 ### Goals
 
-- Allow personas to **grow their own knowledge base** by ingesting:
+- Allow analysis profiles to **grow their own knowledge base** by ingesting:
   - URLs
   - files
   - short text notes
-- Extend the ingestion pipeline so persona corpora:
+- Extend the ingestion pipeline so analysis profile corpora:
   - are separate from main investigative corpora
   - hold how-to docs, best practices, references
-- Provide MCP tools and HTTP endpoints so agents and UIs can enrich personas over time.
+- Provide MCP tools and HTTP endpoints so agents and UIs can enrich analysis profiles over time.
 
 ---
 
-### 10.1 Persona Corpora Model
+### 10.1 Analysis Profile Corpora Model
 
 Design decision:
 
-- Persona-specific corpora are just special corpora in `CorpusStore`, with:
-  - `type = "persona_manual"`
-  - `persona_id` annotated in metadata.
+- Profile-specific corpora are just special corpora in `CorpusStore`, with:
+  - `type = "persona_manual  # To be renamed profile_manual"`
+  - `persona_id` (to be renamed `analysis_profile_id`) annotated in metadata.
 
 Implementation:
 
-- On startup, `PersonaRegistry` checks if a manual corpus exists for each persona.
-  - If not, optionally create one (config flag: `auto_create_persona_corpora`).
-- Store reference to `persona_manual_corpus_id` in persona runtime configuration.
+- On startup, `PersonaRegistry` (to be renamed `AnalysisProfileRegistry`) checks if a manual corpus exists for each analysis profile.
+  - If not, optionally create one (config flag: `auto_create_persona_corpora`, to be renamed).
+- Store reference to `persona_manual  # To be renamed profile_manual_corpus_id` in analysis profile runtime configuration.
 
 TDD:
 
@@ -227,7 +227,7 @@ TDD:
 
 ### 10.2 IngestionService Enhancements
 
-Add persona-specific helper methods:
+Add profile-specific helper methods:
 
 ```python
 class IngestionService:
@@ -245,18 +245,18 @@ class IngestionService:
 TDD:
 
 - Mock CorpusStore + DocumentStore.
-- Ensure persona ingestion maps to the correct persona corpus.
+- Ensure persona ingestion maps to the correct analysis profile corpus.
 
 ---
 
 ### 10.3 Duplicate Detection & Deduplication
 
-To avoid persona corpora blowing up with redundant copies:
+To avoid analysis profile corpora blowing up with redundant copies:
 
 - Maintain a `hash` column in DocumentStore (e.g., SHA256 of normalized text).
 - For persona ingestion:
   - Before inserting, compute hash.
-  - If a document with same hash exists in the persona corpus:
+  - If a document with same hash exists in the analysis profile corpus:
     - Optionally skip or mark as another reference (configurable).
 
 TDD:
@@ -327,7 +327,7 @@ TDD:
 
 ### 10.6 PersonaRuntime Awareness
 
-PersonaRuntime should optionally draw on persona corpus when:
+PersonaRuntime should optionally draw on analysis profile corpus when:
 
 - Interpreting the question (e.g., injection of persona methods and best practices).
 - Planning the reasoning approach.
@@ -346,7 +346,7 @@ TDD:
 
 ### Phase 10 Exit Criteria
 
-- Personas can ingest resources via MCP and HTTP.
+- Analysis Profiles can ingest resources via MCP and HTTP.
 - Persona manual corpora exist and are used in reasoning.
 - Duplicate detection works for persona docs.
 - Tests cover ingestion, wiring, and persona runtime integration points.

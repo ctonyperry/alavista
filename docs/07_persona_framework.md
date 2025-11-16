@@ -1,44 +1,44 @@
-# Alavista – Persona Framework Specification
+# Alavista – Analysis Profile Framework Specification
 
-Personas are not gimmicks.  
+Analysis Profiles are not gimmicks.  
 They are *domain-constrained expert reasoning engines*, tied directly into:
 
 - ontology constraints  
 - graph + semantic search tools  
 - safety scaffolding  
 - curated corpus subsets  
-- persona-specific ingestion  
+- analysis profile-specific ingestion  
 
-A persona is a disciplined expert with a defined worldview — not an LLM “character.”
+An analysis profile is a disciplined expert with a defined worldview — not an LLM “character.”
 
-This document defines the entire persona runtime architecture.
+This document defines the entire analysis profile runtime architecture.
 
 ---
 
 # 1. Purpose
 
-The Persona Framework exists to:
+The Analysis Profile Framework exists to:
 
 1. Provide **domain-specific reasoning** without hallucination.  
-2. Ensure each persona uses **only legitimate tools** based on ontology constraints.  
-3. Bind personas to **their own corpora + vector DBs** (training guides, techniques, best practices).  
+2. Ensure each analysis profile uses **only legitimate tools** based on ontology constraints.  
+3. Bind analysis profiles to **their own corpora + vector DBs** (training guides, techniques, best practices).  
 4. Allow investigative questions to be interpreted through **expert lenses**.  
 5. Keep the whole system explainable and safe by enforcing **epistemic boundaries**.  
 
-Personas turn Alavista from a search engine into a **modular investigative workstation.**
+Analysis Profiles turn Alavista from a search engine into a **modular investigative workstation.**
 
 ---
 
 # 2. Architecture Overview
 
-Directory structure:
+Directory structure (current implementation, to be renamed in future refactor):
 
 ```
-core/personas/
-    persona_base.py
-    persona_registry.py
-    persona_runtime.py
-    persona_profiles/
+core/personas/                    # To be renamed to core/analysis_profiles/
+    persona_base.py              # To be renamed to analysis_profile_base.py
+    persona_registry.py          # To be renamed to analysis_profile_registry.py
+    persona_runtime.py           # To be renamed to analysis_profile_runtime.py
+    persona_profiles/            # To be renamed to profile_definitions/
         financial_forensics.yaml
         flight_analysis.yaml
         legal_review.yaml
@@ -47,20 +47,20 @@ core/personas/
         general_investigator.yaml
 ```
 
-Personas consist of:
+Analysis Profiles consist of:
 
 1. **Metadata** (name, description, domain)  
 2. **Tool whitelists** (which MCP tools are allowed)  
 3. **Ontology constraints** (entity & relation whitelists)  
 4. **Strategy rules** (how to reason, escalate, or narrow scope)  
-5. **Persona-specific corpora**  
+5. **Analysis Profile-specific corpora**  
 6. **Safety rules**  
 7. **LLM prompt scaffolding**  
 8. **Memory / working context**  
 
 ---
 
-# 3. Persona Definition Format
+# 3. Analysis Profile Definition Format
 
 Stored as YAML:
 
@@ -123,15 +123,15 @@ reasoning:
 
 safety:
   disclaimers:
-    - "This persona interprets only explicit evidence. No inference."
+    - "This analysis profile interprets only explicit evidence. No inference."
   provenance_required: true
 ```
 
-This YAML is loaded and validated by the PersonaRegistry.
+This YAML is loaded and validated by the `PersonaRegistry` (to be renamed `AnalysisProfileRegistry`).
 
 ---
 
-# 4. PersonaBase (persona_base.py)
+# 4. PersonaBase (persona_base.py) — to be renamed `AnalysisProfileBase`
 
 Abstract class:
 
@@ -166,19 +166,19 @@ class PersonaBase(ABC):
 
 Purpose:
 
-- Normalize persona behaviors  
+- Normalize analysis profile behaviors  
 - Encapsulate domain epistemology  
-- Ensure every persona outputs consistent narrative + provenance  
+- Ensure every analysis profile outputs consistent narrative + provenance  
 
 ---
 
-# 5. PersonaRuntime (persona_runtime.py)
+# 5. PersonaRuntime (persona_runtime.py) — to be renamed `AnalysisProfileRuntime`
 
-The brains of the persona subsystem.
+The brains of the analysis profile subsystem.
 
 Takes:
 
-- Persona definition  
+- Analysis Profile definition  
 - User question  
 - Tools available  
 - Ontology  
@@ -187,7 +187,7 @@ Takes:
 Produces:
 
 - A multi-step expert reasoning sequence  
-- Final answer constrained by ontology + persona rules  
+- Final answer constrained by ontology + analysis profile rules  
 - A provenance-enriched explanation  
 
 ## 5.1 Workflow
@@ -197,7 +197,7 @@ Produces:
    - extract key entities (using ontology)
 
 2. **Select tools**  
-   - based on persona’s tool whitelist  
+   - based on analysis profile’s tool whitelist  
    - query category  
    - ontology-type relevance  
    - safety rules (e.g., forbid speculation)
@@ -212,7 +212,7 @@ Produces:
 5. **Aggregate results**  
    - graph edges  
    - semantic hits  
-   - persona corpus context  
+   - analysis profile corpus context  
 
 6. **Apply reasoning rules**  
    - strong relations emphasized  
@@ -222,13 +222,13 @@ Produces:
 7. **Format answer**  
    - clear evidence chain  
    - explicit provenance  
-   - persona’s “voice” (methodological, not personality)  
+   - analysis profile’s “voice” (methodological, not personality)  
 
 ---
 
-# 6. Persona Registry (persona_registry.py)
+# 6. Analysis Profile Registry (persona_registry.py) — to be renamed `analysis_profile_registry.py`
 
-Loads YAML persona definitions, validates them, and produces PersonaBase instances.
+Loads YAML analysis profile definitions, validates them, and produces `PersonaBase` instances (to be renamed `AnalysisProfileBase`).
 
 API:
 
@@ -253,9 +253,9 @@ The registry ensures consistency between:
 
 ---
 
-# 7. Persona-Specific Corpora
+# 7. Analysis Profile-Specific Corpora
 
-Each persona has:
+Each analysis profile has:
 
 - **its own FAISS index**  
 - **its own metadata JSONL**  
@@ -271,19 +271,19 @@ These provide:
 - analytic frameworks  
 - domain reasoning scaffolds  
 
-This turns personas into **well-trained analysts**, not just prompt presets.
+This turns analysis profiles into **well-trained analysts**, not just prompt presets.
 
 ### MVP:  
 local, static, vector DB.
 
 ### v1.1:  
-MCP tool `persona_ingest_resource(url | file)` adds new info to persona corpus.
+MCP tool `persona_ingest_resource(url | file)` adds new info to analysis profile corpus.
 
 ---
 
 # 8. Integration With Rest of System
 
-The persona runtime hooks into:
+The analysis profile runtime hooks into:
 
 - **SearchService**  
   - BM25, vector, hybrid  
@@ -302,14 +302,16 @@ The persona runtime hooks into:
 
 ---
 
-# 9. MCP Tools for Personas
+# 9. MCP Tools for Analysis Profiles
 
-1. `persona_list()` — enumerate available personas  
-2. `persona_select(id)` — switch active persona  
-3. `persona_query(id, question)` — full reasoning cycle  
-4. `persona_ingest_resource(id, url | file)` — extend persona’s corpus  
-5. `persona_inspect(id)` — return config + rules  
-6. `persona_explain(id, question)` — show step-by-step reasoning plan  
+Current tool names (to be renamed in future implementation):
+
+1. `persona_list()` — enumerate available analysis profiles (to be renamed `analysis_profile_list` or `profile_list`)  
+2. `persona_select(id)` — switch active analysis profile (to be renamed `analysis_profile_select` or `profile_select`)  
+3. `persona_query(id, question)` — full reasoning cycle (to be renamed `analysis_profile_query` or `profile_query`)  
+4. `persona_ingest_resource(id, url | file)` — extend analysis profile’s corpus  
+5. `persona_inspect(id)` — return config + rules (to be renamed `analysis_profile_inspect` or `profile_inspect`)  
+6. `persona_explain(id, question)` — show step-by-step reasoning plan (to be renamed `analysis_profile_explain` or `profile_explain`)  
 
 ---
 
@@ -318,14 +320,14 @@ The persona runtime hooks into:
 1. No relation may be invented outside ontology.  
 2. No chain-of-inference longer than what the graph directly supports.  
 3. All weak links (co-mentions) must be labeled as weak.  
-4. All persona answers must show provenance if any structural claim is made.  
-5. Persona must decline questions that require speculation.
+4. All analysis profile answers must show provenance if any structural claim is made.  
+5. Analysis Profile must decline questions that require speculation.
 
 Example:
 
 > “Is X guilty?”
 
-→ Persona responds:
+→ Analysis Profile responds:
 
 > This cannot be answered. Only evidence-backed relationships can be returned.
 
@@ -340,19 +342,19 @@ Example:
 - Tool selector logic  
 - Query→category classification  
 - Query refinement rules  
-- Persona-level safety filters  
+- Analysis Profile-level safety filters  
 
 ## Integration Tests
 
 - persona_query end-to-end  
-- persona reasoning vs ontology constraints  
-- persona → graph queries  
-- persona → semantic queries  
-- persona corpus ingestion  
+- analysis profile reasoning vs ontology constraints  
+- analysis profile → graph queries  
+- analysis profile → semantic queries  
+- analysis profile corpus ingestion  
 
 ## Black-Box Tests
 
-Simulated investigative questions for each persona:
+Simulated investigative questions for each analysis profile:
 
 - Financial Forensics: follow-the-money  
 - Flight Analysis: manifest reconstruction  
@@ -364,15 +366,15 @@ Simulated investigative questions for each persona:
 
 # 12. Definition of Done
 
-Persona framework is complete when:
+Analysis Profile framework is complete when:
 
-- Persona definitions exist  
+- Analysis Profile definitions exist  
 - PersonaRegistry loads YAML correctly  
 - PersonaRuntime can perform multi-step reasoning  
 - Tool selection is ontology-constrained  
-- Corpus-per-persona vector DBs working  
+- Corpus-per-analysis profile vector DBs working  
 - Ingestion tool operational  
-- Persona MCP tools integrated  
+- Analysis Profile MCP tools integrated  
 - 80%+ test coverage  
 - Documented clearly  
 

@@ -292,7 +292,7 @@ Structural retrieval augmentation:
 2. **Ontology-constrained extraction**  
 3. **Confidence propagation**  
 4. **Full provenance visible**  
-5. **Clear separation: graph evidence vs persona narrative**  
+5. **Clear separation: graph evidence vs analysis profile narrative**  
 
 ---
 

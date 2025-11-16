@@ -14,7 +14,7 @@ Phase 1 of the Alavista roadmap has been successfully implemented. This phase es
 Three fundamental Pydantic models:
 
 - **Corpus**: Logical collections of documents
-  - Supports types: `persona_manual`, `research`, `global`
+  - Supports types: `persona_manual  # To be renamed profile_manual`, `research`, `global`
   - Includes metadata and creation timestamps
   
 - **Document**: Full text documents with deduplication

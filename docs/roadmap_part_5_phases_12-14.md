@@ -18,7 +18,7 @@ It assumes Phases 0–11 are complete and stable.
 - Provide a **minimal but effective web UI** on top of the HTTP API:
   - Ingest documents into corpora.
   - Run semantic + hybrid search.
-  - Explore personas and ask persona-scoped questions.
+  - Explore analysis profiles and ask analysis profile-scoped questions.
   - Inspect graph neighborhoods and paths.
 - Keep it **thin and replaceable**:
   - No business logic in the UI.
@@ -47,13 +47,13 @@ Backend remains FastAPI (already built in Phase 8).
 
 - Shows:
   - List of corpora.
-  - List of personas.
+  - List of analysis profiles.
   - Basic system status (e.g., connected to API, graph/ontology loaded).
 
 Implementation:
 
 - `GET /api/v1/corpora`
-- `GET /api/v1/personas`
+- `GET /api/v1/personas` (to be renamed `/api/v1/analysis-profiles` or `/profiles`)
 
 ---
 
@@ -65,7 +65,7 @@ Features:
   - name, id, type, document count (optional count endpoint or metadata).
 - **Create corpus**:
   - Name
-  - Type: `persona_manual` | `research` | `global`
+  - Type: `persona_manual  # To be renamed profile_manual` | `research` | `global`
 - **Inspect corpus**:
   - Show recent ingested documents (requires `list_documents` API or approximate metadata listing).
 
@@ -127,11 +127,11 @@ Optional enhancements:
 
 ---
 
-#### 12.2.5 Persona Workbench
+#### 12.2.5 Analysis Profile Workbench
 
 Features:
 
-- Persona selector (dropdown).
+- Analysis profile selector (dropdown).
 - Question input.
 - Optional selection of topic corpus (if relevant).
 - Show:
@@ -142,15 +142,15 @@ Features:
 
 HTTP usage:
 
-- `GET /api/v1/personas`
-- `GET /api/v1/personas/{persona_id}`
-- `POST /api/v1/personas/{persona_id}/answer`
+- `GET /api/v1/personas` (to be renamed `/api/v1/analysis-profiles` or `/profiles`)
+- `GET /api/v1/personas/{persona_id}` (to be renamed `/api/v1/analysis-profiles/{profile_id}`)
+- `POST /api/v1/personas/{persona_id}/answer` (to be renamed `/api/v1/analysis-profiles/{profile_id}/answer`)
 
 Optional persona ingestion UI:
 
-- From persona detail page:
-  - Ingest persona resources (URL, text, file).
-  - Calls `/api/v1/personas/{persona_id}/ingest/*`.
+- From analysis profile detail page:
+  - Ingest analysis profile resources (URL, text, file).
+  - Calls `/api/v1/personas/{persona_id}/ingest/*` (to be renamed with `/analysis-profiles/`).
 
 ---
 
@@ -198,7 +198,7 @@ ui/
       corpora.ts
       ingest.ts
       search.ts
-      personas.ts
+      analysis profiles.ts
       graph.ts
       ontology.ts
     components/
@@ -231,7 +231,7 @@ ui/
   - create new corpora
   - ingest text/url/file into a corpus
   - run search over a corpus
-  - show personas and answer a question using a persona
+  - show analysis profiles and answer a question using an analysis profile
   - perform basic graph exploration (find entity, neighbors, paths)
 - UI is **optional to run**, but when run against the API, it works with no code changes.
 
@@ -316,7 +316,7 @@ Logging:
 - Log events:
   - ingestion job started/finished
   - graph extraction tasks
-  - persona queries (without sensitive user input if privacy is a concern)
+  - analysis profile queries (without sensitive user input if privacy is a concern)
   - errors and warnings
 
 Metrics (lightweight MVP):
@@ -324,7 +324,7 @@ Metrics (lightweight MVP):
 - Counters:
   - number of ingestion operations
   - number of search queries
-  - number of persona queries
+  - number of analysis profile queries
 - Latency histograms (if using something like Prometheus later).
 
 TDD:
@@ -414,7 +414,7 @@ Key docs:
      - `docker compose up` (or local run).
      - ingest sample data.
      - run a search.
-     - run a persona query.
+     - run an analysis profile query.
    - Links to deeper docs.
 
 2. **docs/architecture.md**
@@ -422,7 +422,7 @@ Key docs:
      - core services
      - data flows
      - ontologies & graph
-     - personas & graph-guided RAG
+     - analysis profiles & graph-guided RAG
    - Reference for maintainers and contributors.
 
 3. **docs/usage_journalist.md**
@@ -430,16 +430,16 @@ Key docs:
      - FOIA docs.
      - corpora ingestion.
      - graph exploration.
-     - persona queries.
+     - analysis profile queries.
 
 4. **docs/deployment.md**
    - Local usage.
    - Running via Docker.
    - Optional notes on remote hosting (if you choose to include).
 
-5. **docs/personas.md**
-   - How personas work.
-   - How to create/modify a persona profile.
+5. **docs/analysis profiles.md**
+   - How analysis profiles work.
+   - How to create/modify an analysis profile.
    - Safety guidelines.
 
 TDD (informal):
@@ -458,14 +458,14 @@ Provide:
   - Prebuilt:
     - corpus ingested
     - some graph edges extracted
-    - possibly sample persona config.
+    - possibly sample analysis profile config.
 
 - Notebook or markdown-based walkthrough:
   - Load minimal corpus.
   - Run:
     - basic search.
     - graph find → neighbors.
-    - persona query → answer with citations.
+    - analysis profile query → answer with citations.
 
 This turns the repo from “promising” into **immediately useful**.
 
@@ -503,7 +503,7 @@ Document (in `ROADMAP.md` or similar):
 - Richer ontology (Flights, Accounts, Transactions…).
 - Advanced entity resolution with embeddings.
 - Time-aware graphs (temporal edges).
-- Per-persona advanced reasoning behaviors.
+- Per-analysis-profile advanced reasoning behaviors.
 - Federated / multi-tenant setups.
 - Integration with external investigative tools (e.g., Maltego, Neo4j, etc.).
 - Richer UI: timelines, heat maps, clustering visualizations.
@@ -519,7 +519,7 @@ These are **explicitly post-v1** so the project doesn’t get stuck chasing perf
   - clone the repo,
   - follow the README,
   - ingest some docs,
-  - run a persona query,
+  - run an analysis profile query,
   - explore a small graph,
   - and understand what the tool is for.
 

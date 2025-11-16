@@ -6,7 +6,7 @@ The **core services layer** implements all domain logic and must stay free of:
 - MCP-specific code
 - UI concerns
 - Hard-coded LLM model choices
-- Hard-coded corpus IDs or persona IDs
+- Hard-coded corpus IDs or analysis profile IDs
 
 It is the **engine** of Alavista — everything else adapts *to* this layer.
 
@@ -500,7 +500,7 @@ LLMClient must not assume a specific vendor or model; wiring happens in `llm_mod
 
 ### 3.8 `PromptManager`
 
-**Purpose:** Centralize prompt templates and variations for persona planning, research QA, extraction, and ontology usage.
+**Purpose:** Centralize prompt templates and variations for analysis profile planning, research QA, extraction, and ontology usage.
 
 #### Responsibilities
 
@@ -512,7 +512,7 @@ class PromptManager:
 
     def build_persona_planner_prompt(
         self,
-        persona,
+        persona,  # Conceptually an analysis profile
         question: str,
         manual_snippets: list[str],
         ontology_summary: str | None = None,
@@ -521,7 +521,7 @@ class PromptManager:
 
     def build_research_qa_prompt(
         self,
-        persona,
+        persona,  # Conceptually an analysis profile
         question: str,
         evidence_snippets: list[str],
         ontology_summary: str | None = None,
@@ -541,9 +541,9 @@ class PromptManager:
 
 These tools orchestrate LLM calls and parse structured results.
 
-#### `PersonaPlanner`
+#### `PersonaPlanner` (to be renamed `AnalysisProfilePlanner`)
 
-Purpose: Given persona manuals + question, produce a structured plan for how to investigate.
+Purpose: Given analysis profile manuals + question, produce a structured plan for how to investigate.
 
 ```python
 from typing import Any
@@ -561,7 +561,7 @@ class PersonaPlanner:
 
     async def plan(
         self,
-        persona: Persona,
+        persona: Persona,  # Conceptually an analysis profile
         question: str,
         manual_snippets: list[str],
         ontology_context: str | None = None,
@@ -592,7 +592,7 @@ class ResearchQA:
 
     async def answer(
         self,
-        persona: Persona,
+        persona: Persona,  # Conceptually an analysis profile
         question: str,
         evidence_snippets: list[str],
         evidence_metadata: list[dict[str, Any]],
@@ -606,14 +606,14 @@ class ResearchQA:
         """
 ```
 
-The returned dict will typically be used to populate a `PersonaAnswer` model.
+The returned dict will typically be used to populate a `PersonaAnswer` model (to be renamed `AnalysisProfileAnswer`).
 
 
 ---
 
-### 3.10 `PersonaRuntime`
+### 3.10 `PersonaRuntime` (to be renamed `AnalysisProfileRuntime`)
 
-**Purpose:** Coordinate the end-to-end flow of answering a question using a specific persona and topic corpus.
+**Purpose:** Coordinate the end-to-end flow of answering a question using a specific analysis profile and topic corpus.
 
 #### Inputs
 
@@ -623,8 +623,8 @@ The returned dict will typically be used to populate a `PersonaAnswer` model.
 
 The PersonaRuntime must:
 
-1. Load persona definition from `personas/` (via a `PersonaRegistry` or loader in `core/personas.py`).
-2. Identify the persona’s manual corpus (`persona.manual_corpus_id`).
+1. Load analysis profile definition from `personas/` (via a `PersonaRegistry` or loader in `core/personas.py (file to be renamed)`).
+2. Identify the analysis profile’s manual corpus (`persona.manual_corpus_id`).
 3. Use `SearchService` on the manual corpus to retrieve relevant snippets about how to approach such a question.
 4. Use `PersonaPlanner` to generate a plan (possibly referencing ontology constraints).
 5. Use `SearchService` on the research corpus to retrieve candidate evidence documents/chunks.
@@ -750,7 +750,7 @@ Core services must be thoroughly unit-tested with fakes/mocks where needed.
 Integration tests (in `tests/`) should cover:
 
 - end-to-end: `IngestionService` → `SearchService` for a simple corpus;
-- persona-driven flow with:
+- analysis profile-driven flow with:
   - small test corpora,
   - fake LLMClient producing deterministic JSON/text.
 
@@ -780,9 +780,9 @@ Core services are considered “v1 complete” when:
   - create corpora,
   - ingest documents,
   - run hybrid search,
-  - run a persona answer flow (even with stubbed LLMs).
+  - run a analysis profile answer flow (even with stubbed LLMs).
 
-At that point, the project has a **fully functioning semantic + persona reasoning engine**, ready for:
+At that point, the project has a **fully functioning semantic + analysis profile reasoning engine**, ready for:
 
 - Graph layer integration,
 - Ontology constraints,
