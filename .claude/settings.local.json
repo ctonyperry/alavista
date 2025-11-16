@@ -3,7 +3,12 @@
     "allow": [
       "Bash(git commit:*)",
       "Bash(python -m pytest:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(uvicorn:*)",
+      "Bash(timeout 3 bash:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(python -m cli.main:*)"
     ],
     "deny": [],
     "ask": []

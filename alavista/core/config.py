@@ -27,6 +27,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # Environment
+    env: str = Field(default="dev", description="Environment (dev, prod, test)")
+
     # Application metadata
     app_name: str = Field(default="Alavista", description="Application name")
 
@@ -40,11 +43,29 @@ class Settings(BaseSettings):
     data_dir: Path = Field(
         default=Path("./data"), description="Directory for storing application data"
     )
+    db_path: Path = Field(
+        default=Path("./data/alavista.db"), description="SQLite database path"
+    )
+
+    # HTTP API configuration
+    api_host: str = Field(default="0.0.0.0", description="API server host")
+    api_port: int = Field(default=8000, description="API server port")
 
     # Ollama/LLM configuration
+    ollama_base_url: str = Field(
+        default="http://localhost:11434", description="Ollama service base URL"
+    )
     ollama_host: str = Field(default="http://localhost:11434", description="Ollama service URL")
     ollama_model: str = Field(
         default="llama3.1:8b", description="Default Ollama model for text generation"
+    )
+    llm_model_tier_default: str = Field(
+        default="reasoning_default", description="Default LLM tier for reasoning"
+    )
+
+    # Embeddings configuration
+    embedding_model_name: str = Field(
+        default="all-minilm-l6-v2", description="Default embedding model name"
     )
 
     # Vector search configuration
@@ -57,6 +78,11 @@ class Settings(BaseSettings):
     )
     vector_normalize: bool = Field(
         default=True, description="Whether to L2-normalize embeddings before indexing/search"
+    )
+
+    # Persona configuration
+    auto_create_persona_corpora: bool = Field(
+        default=False, description="Automatically create persona manual corpora on startup"
     )
 
     def __init__(self, **kwargs):
