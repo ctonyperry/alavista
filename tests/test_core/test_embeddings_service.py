@@ -12,8 +12,7 @@ from alavista.core.embeddings.service import (
 def test_fallback_dim_and_determinism():
     svc = DeterministicFallbackEmbeddingService(dim=16)
     texts = ["hello world", "hello world", "different"]
-    loop = asyncio.get_event_loop()
-    out = loop.run_until_complete(svc.embed_texts(texts))
+    out = asyncio.run(svc.embed_texts(texts))
     assert len(out) == 3
     assert all(len(v) == 16 for v in out)
     # identical inputs produce identical vectors
@@ -24,8 +23,7 @@ def test_fallback_dim_and_determinism():
 
 def test_default_service_available():
     svc = get_default_embedding_service()
-    loop = asyncio.get_event_loop()
-    out = loop.run_until_complete(svc.embed_texts(["a test"]))
+    out = asyncio.run(svc.embed_texts(["a test"]))
     assert len(out) == 1
     assert len(out[0]) > 0
 
@@ -35,8 +33,7 @@ def test_sentence_transformers_installed():
     if not _HAS_ST:
         return
     svc = SentenceTransformersEmbeddingService(batch_size=2)
-    loop = asyncio.get_event_loop()
-    out = loop.run_until_complete(svc.embed_texts(["one", "two", "three"]))
+    out = asyncio.run(svc.embed_texts(["one", "two", "three"]))
     assert len(out) == 3
     # all-MiniLM-L6-v2 produces 384-dim vectors
     assert all(len(v) == 384 for v in out)

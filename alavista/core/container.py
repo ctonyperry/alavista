@@ -16,6 +16,7 @@ from alavista.search.search_service import SearchService
 from alavista.vector import FaissVectorSearchService, InMemoryVectorSearchService, VectorSearchService, _HAS_FAISS
 from alavista.graph import GraphService, SQLiteGraphStore
 from alavista.ontology.service import OntologyService, OntologyError
+from alavista.personas import PersonaRegistry, PersonaRuntime
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -268,6 +269,101 @@ class Container:
             SearchService: Search service singleton
         """
         return Container.create_search_service()
+
+    @staticmethod
+    def create_persona_registry(
+        ontology_service: OntologyService | None = None,
+        settings: Settings | None = None,
+    ) -> PersonaRegistry:
+        """
+        Create a PersonaRegistry instance.
+
+        Args:
+            ontology_service: Ontology service for validation (uses singleton if not provided)
+            settings: Settings for locating persona profiles
+
+        Returns:
+            PersonaRegistry: Persona registry instance
+        """
+        ontology_service = ontology_service or Container.get_ontology_service()
+        settings = settings or Container.get_settings()
+
+        # Define allowed tools
+        allowed_tools = [
+            "semantic_search",
+            "keyword_search",
+            "graph_find_entity",
+            "graph_neighbors",
+            "graph_paths",
+        ]
+
+        registry = PersonaRegistry(
+            ontology_service=ontology_service,
+            allowed_tools=allowed_tools,
+        )
+
+        # Load personas from packaged profiles
+        personas_dir = Path(__file__).resolve().parent.parent / "personas" / "persona_profiles"
+        if personas_dir.exists():
+            try:
+                registry.load_all(personas_dir)
+            except Exception as e:
+                logger.warning(f"Failed to load persona profiles: {e}")
+
+        return registry
+
+    @staticmethod
+    @lru_cache
+    def get_persona_registry() -> PersonaRegistry:
+        """
+        Get singleton PersonaRegistry instance.
+
+        Returns:
+            PersonaRegistry: Persona registry singleton
+        """
+        return Container.create_persona_registry()
+
+    @staticmethod
+    def create_persona_runtime(
+        persona_registry: PersonaRegistry | None = None,
+        search_service: SearchService | None = None,
+        graph_service: GraphService | None = None,
+        corpus_store: SQLiteCorpusStore | None = None,
+    ) -> PersonaRuntime:
+        """
+        Create a PersonaRuntime instance.
+
+        Args:
+            persona_registry: Persona registry (uses singleton if not provided)
+            search_service: Search service (uses singleton if not provided)
+            graph_service: Graph service (uses singleton if not provided)
+            corpus_store: Corpus store (uses singleton if not provided)
+
+        Returns:
+            PersonaRuntime: Persona runtime instance
+        """
+        persona_registry = persona_registry or Container.get_persona_registry()
+        search_service = search_service or Container.get_search_service()
+        graph_service = graph_service or Container.get_graph_service()
+        corpus_store = corpus_store or Container.get_corpus_store()
+
+        return PersonaRuntime(
+            persona_registry=persona_registry,
+            search_service=search_service,
+            graph_service=graph_service,
+            corpus_store=corpus_store,
+        )
+
+    @staticmethod
+    @lru_cache
+    def get_persona_runtime() -> PersonaRuntime:
+        """
+        Get singleton PersonaRuntime instance.
+
+        Returns:
+            PersonaRuntime: Persona runtime singleton
+        """
+        return Container.create_persona_runtime()
 
 
 def get_container() -> Container:

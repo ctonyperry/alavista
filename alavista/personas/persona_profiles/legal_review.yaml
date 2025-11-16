@@ -1,0 +1,63 @@
+name: "Legal Review"
+id: "legal_review"
+description: "Focused on legal documents, compliance, and regulatory patterns."
+
+entity_whitelist:
+  - Person
+  - Organization
+  - Document
+
+relation_whitelist:
+  - APPEARS_IN
+  - MENTIONED_WITH
+
+strength_rules:
+  strong:
+    - APPEARS_IN
+  weak:
+    - MENTIONED_WITH
+
+tools_allowed:
+  - semantic_search
+  - keyword_search
+  - graph_find_entity
+  - graph_neighbors
+
+corpus:
+  vector_db_path: null
+  metadata_path: null
+  allow_user_extension: false
+
+reasoning:
+  approach: |
+    Examine legal documents for compliance patterns, contractual relationships,
+    and regulatory mentions. Pay attention to exact wording, dates, and legal
+    entities. Use semantic search for legal concepts but always verify with
+    exact text.
+
+  domain_keywords:
+    - contract
+    - agreement
+    - filing
+    - disclosure
+    - regulation
+    - compliance
+    - litigation
+    - settlement
+    - statute
+    - clause
+
+  disallowed_phrases:
+    - "probably"
+    - "appears to"
+    - "might be"
+    - "suggests"
+    - "implies"
+
+safety:
+  disclaimers:
+    - "Documentary analysis only. Not legal advice."
+    - "Consult qualified legal counsel for legal matters."
+    - "Analysis based on corpus documents only."
+  provenance_required: true
+  max_speculation: 0.0

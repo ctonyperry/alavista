@@ -1,10 +1,18 @@
-"""
-Persona framework for Alavista.
+"""Persona framework for domain-specific investigative analysis."""
 
-This module implements persona-driven reasoning:
-- Persona definitions (Investigative Journalist, Financial Forensics, etc.)
-- Persona-specific reasoning strategies
-- Integration with the ontology layer
-- Question answering with persona context
-- Evidence evaluation based on persona expertise
-"""
+from alavista.personas.models import PersonaAnswer, PersonaConfig, QuestionCategory
+from alavista.personas.persona_base import DefaultPersona, PersonaBase
+from alavista.personas.persona_registry import PersonaRegistry, PersonaValidationError
+from alavista.personas.persona_runtime import PersonaRuntime, PersonaRuntimeError
+
+__all__ = [
+    "PersonaAnswer",
+    "PersonaConfig",
+    "QuestionCategory",
+    "PersonaBase",
+    "DefaultPersona",
+    "PersonaRegistry",
+    "PersonaValidationError",
+    "PersonaRuntime",
+    "PersonaRuntimeError",
+]
