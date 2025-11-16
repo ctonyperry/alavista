@@ -11,6 +11,7 @@ from alavista.core.config import Settings, get_settings
 from alavista.core.corpus_store import SQLiteCorpusStore
 from alavista.core.ingestion_service import IngestionService
 from alavista.core.logging import get_logger
+from alavista.search.search_service import SearchService
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -137,6 +138,44 @@ class Container:
             IngestionService: Ingestion service singleton
         """
         return Container.create_ingestion_service()
+
+    @staticmethod
+    def create_search_service(
+        corpus_store: SQLiteCorpusStore | None = None,
+        k1: float = 1.5,
+        b: float = 0.75,
+        remove_stopwords: bool = False,
+    ) -> SearchService:
+        """
+        Create a SearchService instance.
+
+        Args:
+            corpus_store: Corpus store instance (uses singleton if not provided)
+            k1: BM25 k1 parameter (term frequency saturation)
+            b: BM25 b parameter (length normalization)
+            remove_stopwords: Whether to remove stopwords during indexing
+
+        Returns:
+            SearchService: Search service instance
+        """
+        corpus_store = corpus_store or Container.get_corpus_store()
+        return SearchService(
+            corpus_store=corpus_store,
+            k1=k1,
+            b=b,
+            remove_stopwords=remove_stopwords,
+        )
+
+    @staticmethod
+    @lru_cache
+    def get_search_service() -> SearchService:
+        """
+        Get singleton SearchService instance.
+
+        Returns:
+            SearchService: Search service singleton
+        """
+        return Container.create_search_service()
 
 
 def get_container() -> Container:
