@@ -1,0 +1,10 @@
+NOTE: The LICENSE file currently contains GPL-3.0 text.
+According to the Phase 0 requirements, this should be replaced with AGPL-3.0.
+
+The AGPL-3.0 license text can be obtained from:
+https://www.gnu.org/licenses/agpl-3.0.txt
+
+The key difference is that AGPL-3.0 includes network use as "distribution",
+requiring that modifications be shared even when used as a service.
+
+Action needed: Replace LICENSE file content with AGPL-3.0 text.
