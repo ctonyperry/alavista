@@ -3,8 +3,8 @@ Pytest configuration and shared fixtures for Alavista tests.
 """
 
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -15,7 +15,7 @@ from alavista.core.config import Settings
 def test_settings() -> Settings:
     """
     Provide test-specific settings with safe defaults.
-    
+
     Returns:
         Settings: Test configuration instance
     """
@@ -35,9 +35,9 @@ def test_settings() -> Settings:
 def tmp_data_dir() -> Generator[Path, None, None]:
     """
     Provide an isolated temporary directory for test data.
-    
+
     The directory is automatically cleaned up after the test.
-    
+
     Yields:
         Path: Temporary data directory path
     """
@@ -51,16 +51,16 @@ def tmp_data_dir() -> Generator[Path, None, None]:
 def sample_text() -> str:
     """
     Provide sample text for testing document processing.
-    
+
     Returns:
         str: Sample text content
     """
     return """
     This is a sample document for testing purposes.
-    
+
     It contains multiple paragraphs with various content.
     The Alavista platform is designed for investigative analysis.
-    
+
     Documents can contain entities like John Doe and Acme Corporation.
     They may reference events, locations, and relationships.
     """
@@ -70,7 +70,7 @@ def sample_text() -> str:
 def sample_metadata() -> dict:
     """
     Provide sample document metadata for testing.
-    
+
     Returns:
         dict: Sample metadata dictionary
     """
