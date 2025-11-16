@@ -24,8 +24,8 @@ It brings together semantic search, entity extraction, typed graphs, and persona
 - **Graph-Guided Retrieval (Graph-RAG)**
   Combine structure + semantics to follow trails, detect connection points, and answer complex questions.
 
-- **Personas for Expert Lenses**
-  Define investigative personas (Financial Forensics, Flight Analysis, Legal Patterns, etc.) that guide the system’s reasoning and tool selection.
+- **Analysis Profiles for Expert Lenses**
+  Define investigative analysis profiles (Financial Forensics, Flight Analysis, Legal Patterns, etc.) that guide the system’s reasoning and tool selection.
 
 - **Incremental Ingestion**
   Add URLs, files, PDFs, notes, or entire tranches of documents. Alavista embeds and indexes them automatically.

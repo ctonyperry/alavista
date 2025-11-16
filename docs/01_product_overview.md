@@ -8,7 +8,7 @@ Alavista is a **local‑first investigative analysis platform** that combines:
 - Semantic search (BM25 + embeddings)
 - A typed **entity/relationship graph** with provenance
 - A minimal **ontology** for domain clarity
-- **Persona‑driven reasoning** (e.g., investigative journalist, financial forensics)
+- **Analysis profile-driven reasoning** (e.g., investigative journalist, financial forensics)
 - An **MCP server** so LLMs can use it as a tool
 - An optional **HTTP API** for UI and automation
 
@@ -36,7 +36,7 @@ The intent is **civic and subversive**: give journalists, researchers, and citiz
    - Semantic retrieval (BM25 + vector search)
    - Graph (typed nodes/edges with provenance)
    - Ontology (entity and relation vocab)
-   - Personas (how experts think)
+   - Analysis Profiles (how experts think)
    - LLM runtime (planning + QA)
    - Interfaces (MCP, HTTP)
 
@@ -45,16 +45,16 @@ The intent is **civic and subversive**: give journalists, researchers, and citiz
    - Enough to constrain reasoning and graphs.
    - Easy to extend later.
 
-5. **Persona‑driven reasoning**  
-   - Each persona has:
+5. **Analysis profile-driven reasoning**  
+   - Each analysis profile has:
      - “manual” corpora (how they work),
      - ontology whitelists (what they care about),
      - structured prompts.
-   - The same corpus can be explored differently by different personas.
+   - The same corpus can be explored differently by different analysis profiles.
 
 6. **Explainability & provenance**  
    - Every answer should be able to say:
-     - “Here is the reasoning style used (persona).”
+     - “Here is the reasoning style used (analysis profile).”
      - “Here are the documents and relationships I relied on.”
      - “Here is how strong the evidence is.”
 
@@ -86,7 +86,7 @@ The intent is **civic and subversive**: give journalists, researchers, and citiz
 ## 4. Key Capabilities (MVP Roadmap)
 
 1. **Ingestion & corpora**
-   - Create named corpora (research topics, persona manuals).
+   - Create named corpora (research topics, analysis profile manuals).
    - Ingest text, URLs, and files.
    - Deduplicate via content hash.
    - Optional chunking of large documents.
@@ -107,29 +107,29 @@ The intent is **civic and subversive**: give journalists, researchers, and citiz
    - Used by:
      - extraction,
      - graph validation,
-     - personas,
+     - analysis profiles,
      - LLM prompts.
 
-5. **Personas**
-   - Persona definition files (YAML/JSON).
-   - Each persona has:
+5. **Analysis Profiles**
+   - Analysis Profile definition files (YAML/JSON).
+   - Each analysis profile has:
      - a manual corpus,
      - ontology whitelists (entity/relation types),
      - interpretation strength rules (strong/medium/weak evidence).
 
-6. **PersonaRuntime**
+6. **Analysis Profile Runtime** (implemented as `PersonaRuntime`, to be renamed)
    - Given:
-     - persona,
+     - analysis profile,
      - research corpus,
      - question.
    - It:
-     - consults persona manuals,
+     - consults analysis profile manuals,
      - queries semantic search,
      - optionally queries graph,
      - produces an answer + evidence. 
 
 7. **MCP server**
-   - Exposes ingest, search, graph, ontology, and persona Q&A tools.
+   - Exposes ingest, search, graph, ontology, and analysis profile Q&A tools.
    - LLMs can use Alavista as a structured “brain” instead of ad‑hoc scraping.
 
 8. **HTTP API**
@@ -154,7 +154,7 @@ The intent is **civic and subversive**: give journalists, researchers, and citiz
 
 2. **Clear distinction between evidence and narrative**
    - The graph & ontology define evidence.
-   - Persona answers are narrative *based on* evidence and must cite it.
+   - Analysis Profile answers are narrative *based on* evidence and must cite it.
 
 3. **No magic labeling of guilt or criminality**
    - The system maps structure, not moral judgements.

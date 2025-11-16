@@ -27,7 +27,7 @@ interfaces/
       corpora.py
       ingest.py
       search.py
-      personas.py
+      analysis profiles.py
       persona_qna.py
       graph.py
       ontology.py
@@ -74,11 +74,11 @@ class SearchRequest(BaseModel):
     k: int = 20
 ```
 
-Persona Q&A:
+Analysis Profile Q&A:
 
 ```python
-class PersonaQuestionRequest(BaseModel):
-    persona_id: str
+class PersonaQuestionRequest(BaseModel):  # To be renamed AnalysisProfileQuestionRequest
+    persona_id: str  # To be renamed analysis_profile_id or profile_id
     topic_corpus_id: str
     question: str
 ```
@@ -142,21 +142,21 @@ Fetch metadata for a corpus.
 
 ---
 
-## 3.4 Persona Routes
+## 3.4 Analysis Profile Routes
 
-**GET** `/personas`  
-List available personas.
+**GET** `/personas`  (to be renamed `/analysis-profiles` or `/profiles`)
+List available analysis profiles.
 
-**GET** `/personas/{persona_id}`  
-Return persona metadata.
+**GET** `/personas/{persona_id}`  (to be renamed `/analysis-profiles/{profile_id}`)
+Return analysis profile metadata.
 
 ---
 
-## 3.5 Persona Q&A Routes
+## 3.5 Analysis Profile Q&A Routes
 
-**POST** `/personas/{persona_id}/answer`  
-- Executes PersonaRuntime reasoning  
-- Returns structured `PersonaAnswer`.
+**POST** `/personas/{persona_id}/answer`  (to be renamed `/analysis-profiles/{profile_id}/answer`)
+- Executes `PersonaRuntime` (to be renamed `AnalysisProfileRuntime`) reasoning  
+- Returns structured `PersonaAnswer` (to be renamed `AnalysisProfileAnswer`).
 
 ---
 
@@ -225,13 +225,15 @@ Tools must be:
 - `graph_paths({start_id, end_id, max_hops})`
 - `graph_stats(node_id)`
 
-## 4.5 Persona Tools
+## 4.5 Analysis Profile Tools
 
-- `persona_list()`
-- `persona_query({persona_id, topic_corpus_id, question})`
-- `persona_ingest_resource({persona_id, url|file})`
-- `persona_inspect(persona_id)`
-- `persona_explain({persona_id, question})`
+Current tool names (to be renamed in future implementation):
+
+- `persona_list()` (to be renamed `analysis_profile_list` or `profile_list`)
+- `persona_query({persona_id, topic_corpus_id, question})` (to be renamed with `analysis_profile_id` or `profile_id`)
+- `persona_ingest_resource({persona_id, url|file})` (to be renamed `analysis_profile_ingest_resource`)
+- `persona_inspect(persona_id)` (to be renamed `analysis_profile_inspect` or `profile_inspect`)
+- `persona_explain({persona_id, question})` (to be renamed `analysis_profile_explain` or `profile_explain`)
 
 ## 4.6 Ontology Tools
 
@@ -269,7 +271,7 @@ MVP assumes trusted local deployment.
 Future extensions:
 
 - API keys  
-- Persona‑scoped RBAC  
+- Analysis Profile‑scoped RBAC  
 - Source ingestion permissioning  
 
 No decisions here constrain future hardening.
@@ -299,7 +301,7 @@ MCP unit tests:
 
 Interfaces layer is complete when:
 
-- HTTP API routes for corpora, ingest, search, personas, persona_qna, graph, ontology implemented  
+- HTTP API routes for corpora, ingest, search, analysis profiles, persona_qna, graph, ontology implemented  
 - MCP tools for all major capabilities implemented  
 - All mapping functions use core services without embedding logic  
 - 80%+ test coverage for both HTTP and MCP surfaces  

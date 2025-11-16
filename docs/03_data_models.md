@@ -16,8 +16,8 @@ from typing import Any, Literal
 
 class Corpus(BaseModel):
     id: str
-    type: Literal["persona_manual", "research", "global"]
-    persona_id: str | None = None    # for persona_manual type
+    type: Literal["persona_manual", "research", "global"]  # "persona_manual" to be renamed "profile_manual"
+    persona_id: str | None = None    # for persona_manual type (field to be renamed to analysis_profile_id)
     topic_id: str | None = None      # for research corpora (e.g. "epstein_core")
     name: str
     description: str | None = None

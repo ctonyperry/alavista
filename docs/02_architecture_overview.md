@@ -22,11 +22,12 @@ Alavista is organized into the following conceptual layers:
 
 4. **Ontology Layer**  
    - Minimal schema defining allowed entity types, relation types, and evidence semantics.
-   - Acts as a guardrail for graph building, extraction, and persona reasoning.
+   - Acts as a guardrail for graph building, extraction, and analysis profile reasoning.
 
-5. **Personas & Runtime**  
-   - Persona definitions (manual corpora + ontology config).
-   - PersonaRuntime, PersonaPlanner, ResearchQA LLM tools.
+5. **Analysis Profiles & Runtime**  
+   - Analysis Profile definitions (manual corpora + ontology config).
+   - Analysis Profile runtime components (implemented as `PersonaRuntime`, `PersonaPlanner`, etc., to be renamed in future refactor).
+   - ResearchQA LLM tools.
 
 6. **LLM Runtime & Prompts**  
    - Local LLM clients (generation and embeddings).
@@ -60,7 +61,7 @@ alavista/
 │   ├── llm_tools.py            # PersonaPlanner + ResearchQA
 │   ├── persona_runtime.py      # PersonaRuntime orchestration
 │   ├── prompt_manager.py       # Prompt templates & helpers
-│   ├── personas.py             # Persona definitions loader/registry
+│   ├── personas.py             # Analysis Profile definitions loader/registry
 │   └── graph/
 │       ├── models.py           # Node, Edge, Provenance, ResolvedEntity
 │       ├── graph_store.py      # GraphStore abstraction
@@ -77,10 +78,10 @@ alavista/
 │   │   ├── schemas.py          # API request/response models
 │   │   └── routes/
 │   │       ├── corpora.py
-│   │       ├── personas.py
+│   │       ├── personas.py        # Analysis Profile routes (file to be renamed)
 │   │       ├── ingest.py
 │   │       ├── search.py
-│   │       └── persona_qna.py
+│   │       └── persona_qna.py     # Analysis Profile Q&A (file to be renamed)
 │   └── mcp/
 │       ├── mcp_server.py       # Registers tools with MCP runtime
 │       └── graph_tools.py      # Graph‑focused MCP tools
@@ -89,7 +90,7 @@ alavista/
 │   └── embeddings.py           # EmbeddingProvider implementations
 ├── ontology/
 │   └── ontology_v0.1.json      # Minimal ontology definition
-├── personas/
+├── personas/                       # Analysis profile definitions (directory to be renamed)
 │   ├── investigative_journalist.yaml
 │   └── financial_forensics.yaml
 ├── tests/
@@ -145,20 +146,20 @@ This structure is flexible but must preserve the separation between **core logic
    - feed those documents into `SearchService` and/or LLM.
 
 
-### 3.3 Persona‑Driven Question Answering
+### 3.3 Analysis Profile‑Driven Question Answering
 
-1. User/LLM calls MCP tool `persona_answer_question(persona_id, topic_id, question)`.
-2. MCP layer calls `PersonaRuntime` with:
-   - persona definition,
+1. User/LLM calls MCP tool `persona_answer_question(persona_id, topic_id, question)` (tool names to be updated).
+2. MCP layer calls `PersonaRuntime` (to be renamed `AnalysisProfileRuntime`) with:
+   - analysis profile definition,
    - research corpus ID,
    - question.
 3. `PersonaRuntime`:
-   - fetches persona manual corpus docs,
-   - asks `PersonaPlanner` LLM tool for a plan,
+   - fetches analysis profile manual corpus docs,
+   - asks `PersonaPlanner` (to be renamed `AnalysisProfilePlanner`) LLM tool for a plan,
    - runs `SearchService` on manual corpus (to adapt plan),
    - runs `SearchService` and optionally graph queries on research corpus,
    - calls `ResearchQA` LLM tool with evidence docs,
-   - returns structured `PersonaAnswer` with answer text, plan, and evidence doc IDs.
+   - returns structured `PersonaAnswer` (model to be renamed `AnalysisProfileAnswer`) with answer text, plan, and evidence doc IDs.
 
 
 ## 4. Responsibilities by Layer
@@ -171,7 +172,7 @@ This structure is flexible but must preserve the separation between **core logic
   - persistence abstractions,
   - search logic,
   - graph logic,
-  - persona runtime,
+  - analysis profile runtime,
   - LLM abstraction.
 - All **business logic** lives here.
 
@@ -203,7 +204,7 @@ This structure is flexible but must preserve the separation between **core logic
 - Validates entity/relation types.
 - Used in:
   - graph building,
-  - persona configs,
+  - analysis profile configs,
   - LLM prompts.
 
 
@@ -213,14 +214,14 @@ The architecture should support:
 
 - Adding new entity types or relation types by:
   - updating `ontology_v0.1.json`,
-  - possibly adding persona rules.
+  - possibly adding analysis profile rules.
 
 - Swapping out vector/BM25 implementations without changing:
   - MCP layer,
   - HTTP routes,
   - PersonaRuntime.
 
-- Extending personas by adding YAML files and minor prompt tweaks.
+- Extending analysis profiles by adding YAML files and minor prompt tweaks.
 
 - Adding more LLM models or switching embedding providers via config settings.
 
