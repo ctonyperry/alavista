@@ -8,6 +8,8 @@ Uses simple factory pattern with optional singleton behavior for stateful servic
 from functools import lru_cache
 
 from alavista.core.config import Settings, get_settings
+from alavista.core.corpus_store import SQLiteCorpusStore
+from alavista.core.ingestion_service import IngestionService
 from alavista.core.logging import get_logger
 
 # Initialize logger
@@ -74,6 +76,67 @@ class Container:
             Settings: New settings instance
         """
         return Settings(**overrides)
+
+    @staticmethod
+    def create_corpus_store(settings: Settings | None = None) -> SQLiteCorpusStore:
+        """
+        Create a CorpusStore instance.
+
+        Args:
+            settings: Settings instance (uses singleton if not provided)
+
+        Returns:
+            SQLiteCorpusStore: Corpus store instance
+        """
+        settings = settings or Container.get_settings()
+        db_path = settings.data_dir / "corpus.db"
+        return SQLiteCorpusStore(db_path)
+
+    @staticmethod
+    @lru_cache
+    def get_corpus_store() -> SQLiteCorpusStore:
+        """
+        Get singleton CorpusStore instance.
+
+        Returns:
+            SQLiteCorpusStore: Corpus store singleton
+        """
+        return Container.create_corpus_store()
+
+    @staticmethod
+    def create_ingestion_service(
+        corpus_store: SQLiteCorpusStore | None = None,
+        min_chunk_size: int = 500,
+        max_chunk_size: int = 1500,
+    ) -> IngestionService:
+        """
+        Create an IngestionService instance.
+
+        Args:
+            corpus_store: Corpus store instance (uses singleton if not provided)
+            min_chunk_size: Minimum chunk size in characters
+            max_chunk_size: Maximum chunk size in characters
+
+        Returns:
+            IngestionService: Ingestion service instance
+        """
+        corpus_store = corpus_store or Container.get_corpus_store()
+        return IngestionService(
+            corpus_store=corpus_store,
+            min_chunk_size=min_chunk_size,
+            max_chunk_size=max_chunk_size,
+        )
+
+    @staticmethod
+    @lru_cache
+    def get_ingestion_service() -> IngestionService:
+        """
+        Get singleton IngestionService instance.
+
+        Returns:
+            IngestionService: Ingestion service singleton
+        """
+        return Container.create_ingestion_service()
 
 
 def get_container() -> Container:
