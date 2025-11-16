@@ -1,10 +1,3 @@
-<table border="0">
-  <tr>
-    <td><img src="resources/alavistalogo.svg" alt="Alavista Logo" width="200" /></td>
-    <td><h1>Alavista</h1></td>
-  </tr>
-</table>
-
 **Alavista** is an open-source investigative analysis engine designed to help people cut through noise, scale, and obfuscation.
 Its purpose is simple: **reveal what’s already there, hidden in plain sight.**
 
