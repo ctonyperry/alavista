@@ -88,3 +88,88 @@ class SearchResult(BaseModel):
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Document metadata (source_type, source_path, etc.)"
     )
+
+
+# ============================================================================
+# Agent/Run Models (Phase 12)
+# ============================================================================
+
+
+class Step(BaseModel):
+    """
+    Represents a planned action within an investigation run.
+
+    A step describes what action should be taken (e.g., search, graph traversal)
+    and any parameters needed to execute it.
+    """
+
+    action: str = Field(..., description="Action type (search, graph_find, graph_neighbors, etc.)")
+    target: str | None = Field(None, description="Target corpus_id, entity_id, or other identifier")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict, description="Action-specific parameters (query, depth, etc.)"
+    )
+
+
+class StepExecution(BaseModel):
+    """
+    Represents the execution status and result of a planned step.
+
+    Tracks when a step started/completed, its status, and any results or errors.
+    """
+
+    step_index: int = Field(..., description="Index of the step in the plan")
+    status: Literal["pending", "running", "completed", "error"] = Field(
+        ..., description="Current execution status"
+    )
+    started_at: datetime | None = Field(None, description="When execution started")
+    completed_at: datetime | None = Field(None, description="When execution completed")
+    result: dict[str, Any] | None = Field(None, description="Execution result data")
+    error: str | None = Field(None, description="Error message if status is 'error'")
+
+
+class Evidence(BaseModel):
+    """
+    Represents evidence collected during an investigation run.
+
+    Evidence items are document chunks that support findings, along with
+    metadata about which step produced them and their relevance.
+    """
+
+    document_id: str = Field(..., description="ID of the source document")
+    chunk_id: str | None = Field(None, description="ID of the specific chunk")
+    excerpt: str = Field(..., description="Text excerpt from the evidence")
+    score: float = Field(..., description="Relevance score")
+    source_step: int = Field(..., description="Step index that produced this evidence")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata (source, date, etc.)"
+    )
+
+
+class Run(BaseModel):
+    """
+    Represents an investigation run - an agent executing a plan to answer a question.
+
+    A run includes the user's task/question, a planned sequence of steps, execution
+    status for each step, and collected evidence.
+    """
+
+    id: str = Field(..., description="Unique identifier for the run")
+    status: Literal["created", "running", "completed", "error", "cancelled"] = Field(
+        ..., description="Overall run status"
+    )
+    task: str = Field(..., description="User's question or investigation goal")
+    persona_id: str = Field(..., description="Persona conducting the investigation")
+    corpus_id: str | None = Field(None, description="Primary corpus to investigate (optional)")
+    plan: list[Step] = Field(default_factory=list, description="Planned sequence of actions")
+    steps: list[StepExecution] = Field(
+        default_factory=list, description="Execution status for each planned step"
+    )
+    evidence: list[Evidence] = Field(
+        default_factory=list, description="Evidence collected during execution"
+    )
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), description="Creation timestamp"
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), description="Last update timestamp"
+    )

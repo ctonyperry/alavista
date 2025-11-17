@@ -341,3 +341,55 @@ class GraphRAGResponse(BaseModel):
     retrieval_summary: str
     persona_id: str | None = None
     timestamp: datetime
+
+
+# ============================================================================
+# Run Schemas (Investigation Agent Framework)
+# ============================================================================
+
+
+class CreateRunRequest(BaseModel):
+    """Request to create a new investigation run."""
+
+    task: str = Field(..., description="The user's question or investigation goal")
+    persona_id: str
+    corpus_id: str | None = None
+    plan: list[dict[str, Any]] | None = Field(
+        None, description="Optional pre-defined plan of steps"
+    )
+
+
+class RunSummary(BaseModel):
+    """Summary of a run for listing."""
+
+    id: str
+    status: str
+    task: str
+    persona_id: str
+    created_at: datetime
+    step_count: int
+    evidence_count: int
+
+
+class RunDetail(BaseModel):
+    """Detailed run information."""
+
+    id: str
+    status: str
+    task: str
+    persona_id: str
+    corpus_id: str | None
+    plan: list[dict[str, Any]]
+    steps: list[dict[str, Any]]
+    evidence: list[dict[str, Any]]
+    created_at: datetime
+    updated_at: datetime
+
+
+class ExecuteStepRequest(BaseModel):
+    """Request to execute a step in a run."""
+
+    step_index: int = Field(..., ge=0)
+    result: dict[str, Any] | None = Field(
+        None, description="Result data from step execution"
+    )

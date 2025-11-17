@@ -1,5 +1,14 @@
 import { FormEvent, useState } from "react";
 import { Corpus, SearchMode } from "../../../lib/api/types";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 type Props = {
   corpora: Corpus[];
@@ -21,37 +30,45 @@ export function SearchForm({ corpora, defaultMode = "hybrid", onSubmit, isSubmit
   return (
     <form className="rounded-lg border border-border bg-card p-4" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <label className="text-sm font-medium">
-          Corpus
-          <select
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={corpusId}
-            onChange={(e) => setCorpusId(e.target.value)}
-          >
-            {corpora.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm font-medium">
-          Mode
-          <select
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={mode}
-            onChange={(e) => setMode(e.target.value as SearchMode)}
-          >
-            <option value="bm25">BM25</option>
-            <option value="vector">Vector</option>
-            <option value="hybrid">Hybrid</option>
-          </select>
-        </label>
-        <label className="text-sm font-medium md:col-span-1 md:hidden">Query</label>
+        <div className="space-y-2">
+          <label htmlFor="search-corpus" className="text-sm font-medium">
+            Corpus
+          </label>
+          <Select value={corpusId} onValueChange={setCorpusId}>
+            <SelectTrigger id="search-corpus">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {corpora.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="search-mode" className="text-sm font-medium">
+            Mode
+          </label>
+          <Select value={mode} onValueChange={(v) => setMode(v as SearchMode)}>
+            <SelectTrigger id="search-mode">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bm25">BM25</SelectItem>
+              <SelectItem value="vector">Vector</SelectItem>
+              <SelectItem value="hybrid">Hybrid</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="mt-3">
-        <input
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+      <div className="mt-3 space-y-2">
+        <label htmlFor="search-query" className="text-sm font-medium">
+          Query
+        </label>
+        <Input
+          id="search-query"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -60,12 +77,9 @@ export function SearchForm({ corpora, defaultMode = "hybrid", onSubmit, isSubmit
         />
       </div>
       <div className="mt-3">
-        <button
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          disabled={isSubmitting}
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Searching…" : "Search"}
-        </button>
+        </Button>
       </div>
     </form>
   );

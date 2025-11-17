@@ -1,5 +1,7 @@
 import { FormEvent, useState } from "react";
 import { PersonaAnswer } from "../../../lib/api/types";
+import { Button } from "../../../components/ui/button";
+import { Textarea } from "../../../components/ui/textarea";
 
 type Props = {
   personaId: string;
@@ -20,22 +22,21 @@ export function PersonaQA({ personaId, onAsk, answer, isLoading, error }: Props)
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-        <label className="text-sm font-medium">
-          Ask persona
-          <textarea
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        <div className="space-y-2">
+          <label htmlFor="persona-question" className="text-sm font-medium">
+            Ask persona
+          </label>
+          <Textarea
+            id="persona-question"
             rows={3}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             required
           />
-        </label>
-        <button
-          className="w-fit rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          disabled={isLoading}
-        >
+        </div>
+        <Button type="submit" disabled={isLoading} className="w-fit">
           {isLoading ? "Asking…" : "Ask"}
-        </button>
+        </Button>
       </form>
 
       {error && <div className="mt-3 text-sm text-destructive">{error}</div>}

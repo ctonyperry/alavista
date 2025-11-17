@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import LayoutShell from "./components/LayoutShell";
+import { Toaster } from "./components/ui/toaster";
+import { useToast } from "./hooks/use-toast";
 import {
   useCorpora,
   useCreateCorpus,
@@ -57,6 +59,7 @@ function HomePage() {
 function CorporaPage() {
   const { data: corpora = [], isLoading, refetch } = useCorpora();
   const createMutation = useCreateCorpus();
+  const { toast } = useToast();
 
   return (
     <div className="space-y-4">
@@ -67,14 +70,23 @@ function CorporaPage() {
         <CreateCorpusCard
           isSubmitting={createMutation.isPending}
           onSubmit={async (input) => {
-            await createMutation.mutateAsync(input);
-            await refetch();
+            try {
+              await createMutation.mutateAsync(input);
+              await refetch();
+              toast({
+                title: "Success",
+                description: `Corpus "${input.name}" created successfully.`,
+              });
+            } catch (error) {
+              toast({
+                title: "Error",
+                description: `Failed to create corpus: ${(error as Error).message}`,
+                variant: "destructive",
+              });
+            }
           }}
         />
       </div>
-      {createMutation.error ? (
-        <div className="text-sm text-destructive">Error creating corpus: {(createMutation.error as Error).message}</div>
-      ) : null}
     </div>
   );
 }
@@ -83,14 +95,9 @@ function IngestionPage() {
   const { data: corpora = [], isLoading: isLoadingCorpora, refetch } = useCorpora();
   const ingestText = useIngestion("text");
   const ingestUrl = useIngestion("url");
+  const { toast } = useToast();
 
   const isSubmitting = ingestText.isPending || ingestUrl.isPending;
-  const resultMessage = ingestText.data
-    ? `Doc ${ingestText.data.doc_id} (${ingestText.data.chunk_count} chunks)`
-    : ingestUrl.data
-      ? `Doc ${ingestUrl.data.doc_id} (${ingestUrl.data.chunk_count} chunks)`
-      : undefined;
-  const errorMessage = (ingestText.error as Error)?.message ?? (ingestUrl.error as Error)?.message;
 
   if (isLoadingCorpora) {
     return <div className="text-sm text-muted-foreground">Loading corpora…</div>;
@@ -109,11 +116,37 @@ function IngestionPage() {
   return (
     <IngestionTabs
       corpora={corpora}
-      onIngestText={(args) => ingestText.mutateAsync(args)}
-      onIngestUrl={(args) => ingestUrl.mutateAsync(args)}
+      onIngestText={async (args) => {
+        try {
+          const result = await ingestText.mutateAsync(args);
+          toast({
+            title: "Success",
+            description: `Document ingested: ${result.document_id} (${result.chunk_count} chunks)`,
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: `Failed to ingest text: ${(error as Error).message}`,
+            variant: "destructive",
+          });
+        }
+      }}
+      onIngestUrl={async (args) => {
+        try {
+          const result = await ingestUrl.mutateAsync(args);
+          toast({
+            title: "Success",
+            description: `Document ingested from URL: ${result.document_id} (${result.chunk_count} chunks)`,
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: `Failed to ingest URL: ${(error as Error).message}`,
+            variant: "destructive",
+          });
+        }
+      }}
       isSubmitting={isSubmitting}
-      resultMessage={resultMessage}
-      errorMessage={errorMessage}
     />
   );
 }
@@ -260,6 +293,7 @@ function App() {
         <Route path="/graph" element={<GraphPage />} />
         <Route path="/runs" element={<RunsPage />} />
       </Routes>
+      <Toaster />
     </LayoutShell>
   );
 }

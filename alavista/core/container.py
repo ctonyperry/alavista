@@ -12,12 +12,14 @@ from alavista.core.config import Settings, get_settings
 from alavista.core.corpus_store import SQLiteCorpusStore
 from alavista.core.ingestion_service import IngestionService
 from alavista.core.logging import get_logger
+from alavista.core.run_store import RunStore
 from alavista.search.search_service import SearchService
 from alavista.vector import FaissVectorSearchService, InMemoryVectorSearchService, VectorSearchService, _HAS_FAISS
 from alavista.graph import GraphService, SQLiteGraphStore
 from alavista.ontology.service import OntologyService, OntologyError
 from alavista.personas import PersonaRegistry, PersonaRuntime
 from alavista.rag import GraphRAGService
+from alavista.agents import RunService
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -314,6 +316,61 @@ class Container:
             GraphRAGService: Graph-guided RAG service singleton
         """
         return Container.create_graph_rag_service()
+
+    # ========================================================================
+    # Run Store & Service (Agent Foundations - Phase 12)
+    # ========================================================================
+
+    @staticmethod
+    def create_run_store(settings: Settings | None = None) -> RunStore:
+        """
+        Create a RunStore instance.
+
+        Args:
+            settings: Optional settings override
+
+        Returns:
+            RunStore: Run storage instance
+        """
+        settings = settings or get_settings()
+        db_path = settings.data_dir / "runs.db"
+        return RunStore(db_path)
+
+    @staticmethod
+    @lru_cache
+    def get_run_store() -> RunStore:
+        """
+        Get singleton RunStore instance.
+
+        Returns:
+            RunStore: Run storage singleton
+        """
+        return Container.create_run_store()
+
+    @staticmethod
+    def create_run_service(run_store: RunStore | None = None) -> RunService:
+        """
+        Create a RunService instance.
+
+        Args:
+            run_store: Optional run store override
+
+        Returns:
+            RunService: Run management service
+        """
+        run_store = run_store or Container.get_run_store()
+        return RunService(run_store)
+
+    @staticmethod
+    @lru_cache
+    def get_run_service() -> RunService:
+        """
+        Get singleton RunService instance.
+
+        Returns:
+            RunService: Run management service singleton
+        """
+        return Container.create_run_service()
 
     @staticmethod
     def create_persona_registry(

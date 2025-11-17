@@ -1,4 +1,13 @@
 import { FormEvent, useState } from "react";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 type Props = {
   onSubmit: (args: { name: string; type: string }) => Promise<void> | void;
@@ -25,37 +34,38 @@ export function CreateCorpusCard({ onSubmit, isSubmitting }: Props) {
     <div className="rounded-lg border border-border bg-card p-4">
       <h2 className="text-base font-semibold">Create Corpus</h2>
       <form className="mt-3 flex flex-col gap-3" onSubmit={handleSubmit}>
-        <label className="text-sm font-medium">
-          Name
-          <input
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        <div className="space-y-2">
+          <label htmlFor="corpus-name" className="text-sm font-medium">
+            Name
+          </label>
+          <Input
+            id="corpus-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             placeholder="e.g., foia_2024_dump"
           />
-        </label>
-        <label className="text-sm font-medium">
-          Type
-          <select
-            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-          >
-            {corpusTypes.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex w-fit items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
-        >
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="corpus-type" className="text-sm font-medium">
+            Type
+          </label>
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger id="corpus-type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {corpusTypes.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button type="submit" disabled={isSubmitting} className="w-fit">
           {isSubmitting ? "Creating…" : "Create"}
-        </button>
+        </Button>
       </form>
     </div>
   );
