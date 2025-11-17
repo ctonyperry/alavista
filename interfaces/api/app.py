@@ -11,6 +11,7 @@ from interfaces.api.routes import (
     ingest_router,
     ontology_router,
     personas_router,
+    runs_router,
     search_router,
 )
 
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(graph_rag_router, prefix="/api/v1")
     app.include_router(ontology_router, prefix="/api/v1")
     app.include_router(ingest_router, prefix="/api/v1")
+    app.include_router(runs_router, prefix="/api/v1")
 
     @app.get("/health")
     def health_check():

@@ -122,7 +122,7 @@ export function GraphSearch({ onFind, onNeighbors, onPath, results, isLoading, e
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 {results.edges.map((e, idx) => (
                   <li key={`${e.source}-${e.target}-${idx}`}>
-                    {e.source} -> {e.target} {e.type ? `(${e.type})` : ""}
+                    {e.source} {'->'} {e.target} {e.type ? `(${e.type})` : ""}
                   </li>
                 ))}
               </ul>

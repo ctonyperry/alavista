@@ -31,6 +31,15 @@ class CorpusDetail(BaseModel):
     document_count: int
 
 
+class CreateCorpusRequest(BaseModel):
+    """Request to create a new corpus."""
+
+    name: str
+    type: str = Field(default="research", pattern="^(persona_manual|research|global)$")
+    description: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 # ============================================================================
 # Search Schemas
 # ============================================================================
