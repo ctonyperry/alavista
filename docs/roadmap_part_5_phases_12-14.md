@@ -7,6 +7,20 @@ This file covers:
 - **Phase 13** – Optimization, Hardening, Packaging
 - **Phase 14** – v1.0 Release
 
+### Post Phases 10–11 Reprioritization
+
+Phases 10–11 (persona resource ingestion + graph-guided RAG) are complete (`docs/PHASE_10-11_COMPLETED.md`). Remaining work is reprioritized as follows:
+
+- **Phase 12 (Lightweight UI + Agent Foundations)**:
+  - Lock frontend stack (React + Tailwind + Radix + shadcn/ui).
+  - Define Run model + evidence-first structures to support agent UI.
+  - Ship thin UI surfaces for corpora, ingestion, search, personas, graph; optional run/plan view.
+- **Phase 13 (Hardening & Packaging)**:
+  - Robust error handling/logging/metrics, perf tuning, Docker/CI.
+  - Evaluation + replay for Runs; optional external research tool with safety toggles.
+- **Phase 14 (v1.0 Release)**:
+  - Docs, sample data, release checklist; UI remains optional but should work against API.
+
 It assumes Phases 0–11 are complete and stable.
 
 ---
@@ -28,16 +42,26 @@ This is not meant to be “the final product UI,” but a **reference dashboard*
 
 ---
 
-### 12.1 Tech Stack
+### 12.1 Tech Stack (Decision Locked)
 
-- **Frontend framework**: React (Vite or Next.js in SPA mode).
-- **Language**: TypeScript.
-- **UI components**: Lightweight, e.g.,:
-  - Tailwind CSS or simple CSS modules.
-- **Graph visualization**: 
-  - `react-force-graph`, `Cytoscape.js`, or similar light graph lib.
+- **Framework**: React (Vite SPA), TypeScript.
+- **Styling**: Tailwind CSS with design tokens + CSS variables (light/dark).
+- **Primitives**: Radix UI.
+- **Components**: shadcn/ui (Tailwind + Radix wrappers; generated into repo).
+- **Icons**: lucide-react.
+- **State**: React Query (server state), local component state otherwise.
+- **Forms/validation**: react-hook-form + zod.
+- **Testing**: Vitest + React Testing Library + MSW.
+- **Graph visualization**: lightweight lib considered later (placeholder ok in Phase 12).
 
-Backend remains FastAPI (already built in Phase 8).
+Rationale:
+
+- Polished UI without a dedicated designer; coherent defaults.
+- Code-generation-friendly for AI scaffolding.
+- Composable and easily themed; modern, accessible primitives.
+- Fits local-first, open-source deployment and optional UI stance.
+
+Frontend stays thin: all business logic remains in FastAPI/MCP layers; UI only calls HTTP API.
 
 ---
 
@@ -186,45 +210,61 @@ TDD (front-end side):
 
 ---
 
-### 12.3 Frontend Project Layout (High Level)
+### 12.3 UI Project Layout, Theming, Accessibility
 
-Suggested structure:
-
-```
-ui/
-  src/
-    api/
-      client.ts         # axios/fetch wrapper
-      corpora.ts
-      ingest.ts
-      search.ts
-      personas.ts
-      graph.ts
-      ontology.ts
-    components/
-      Layout.tsx
-      CorpusTable.tsx
-      SearchForm.tsx
-      SearchResults.tsx
-      PersonaPanel.tsx
-      GraphViewer.tsx
-    pages/
-      Home.tsx
-      CorporaPage.tsx
-      IngestPage.tsx
-      SearchPage.tsx
-      PersonaPage.tsx
-      GraphPage.tsx
-    hooks/
-      useApi.ts
-    styles/
-  vite.config.ts
-  package.json
-```
+- **Layout**:
+  - New frontend root: `ui/`
+  - `src/components/` (shared shadcn-based components)
+  - `src/features/{corpora,ingestion,search,personas,graph,runs}/components`
+  - `src/lib/api/` (client, hooks, types), `src/lib/theme/` (tokens), `src/lib/hooks/`
+  - `src/pages/` or `src/routes/` (route-level views), `public/`, `tailwind.config.ts`.
+- **Integration**: UI calls HTTP API only; MCP parity maintained by keeping logic in FastAPI/core services.
+- **Theming/tokens**: Tailwind config extended with color/spacing/typography/radius/shadow tokens; CSS variables for light/dark, aligned with shadcn defaults.
+- **Accessibility**: Radix primitives for ARIA/focus; AA contrast; focus-visible styles; aria-live for async states; keyboard nav enforced.
 
 ---
 
-### 12.4 Phase 12 Exit Criteria
+### 12.4 UI Development Plan
+
+1) Bootstrap: Vite + React + TS in `ui/`; add Tailwind/PostCSS config; base `LayoutShell` with sidebar/topbar.
+2) Install/configure: Radix, shadcn/ui (generate button/input/select/textarea/dialog/sheet/tabs/card/badge/table/tooltip/dropdown-menu/toast/skeleton/pagination), lucide-react, React Query, react-hook-form + zod, MSW, Vitest + RTL.
+3) API client: `src/lib/api/client.ts` (fetcher), `types.ts` (DTOs: corpus/doc/search/persona/graph/run/evidence), `hooks.ts` (React Query wrappers).
+4) Routing: `/` home, `/corpora`, `/ingest`, `/search`, `/personas`, `/graph`, `/runs` (optional if Run model present); shell layout with responsive sidebar.
+5) State: React Query for server state; local UI state otherwise; avoid global stores initially.
+6) Backend endpoints: corpora (`GET/POST`), ingest (`/ingest/text|url|file`), search (`/search` with `bm25|vector|hybrid`), personas (`/personas` + Q&A), graph (`/graph/find|neighbors|paths`), runs (`/runs` lifecycle if present).
+
+---
+
+### 12.5 UI Design Spec & Component Scaffolding (First Pass)
+
+- **Layout**: Sidebar + topbar shell; cards/sections; tabs for modes; toasts for async feedback; skeletons for loading; alerts for errors.
+- **Pages**:
+  - Home: cards for system status, recent corpora/personas; quick actions.
+  - Corpora: table + create dialog; badges for types; doc counts if available.
+  - Ingestion: tabs for text/url/file; select corpus; show `doc_id` + `chunk_count`; inline errors.
+  - Search: mode tabs; query input; corpus select; results list with score/excerpt/doc/chunk; empty/loading states.
+  - Personas: list/detail; question box; answer with citations/evidence slots.
+  - Graph Explorer: find/neighbors/paths; tables for nodes/edges; depth/limit indicators; placeholder for viz.
+  - Runs (optional): plan/stepper + evidence list; controls for pause/resume/step if API supports.
+- **Components to scaffold** (feature folders):
+  - Corpora: `CorporaTable`, `CreateCorpusDialog`.
+  - Ingestion: `IngestionTabs` (handlers for text/url/file ingest).
+  - Search: `SearchForm`, `SearchResults`.
+  - Personas: `PersonaList`, `PersonaQA`.
+  - Graph: `GraphSearch` (find/neighbors/paths panel).
+  - Runs: `RunSummary` (plan/steps/evidence view).
+  - Shared: `LayoutShell`, `DataTable`, `PageHeader`, `StatusBadge`, form wrappers for RHF+shadcn.
+- **API shape (reference)**:
+  - Corpus `{id,name,type,doc_count?}`
+  - Ingest result `{doc_id,chunk_count}`
+  - Search result `{score,excerpt,doc_id,chunk_id?,corpus_id?}`
+  - Persona `{id,name,description?}`; answer `{answer,citations?}`
+  - Graph `{nodes:[{id,label,type?}],edges:[{source,target,type?}]}`; neighbors/paths similar.
+  - Run `{id,status,task,plan:[...],steps:[...],evidence:[...]}` if Run model added.
+
+---
+
+### 12.6 Phase 12 Exit Criteria
 
 - UI can:
   - list corpora
@@ -247,6 +287,12 @@ ui/
   - Sensible logging and observability.
   - Easy local deployment (Docker).
 - Focus here is not micro-optimizing, but **removing footguns**.
+
+**Scope updates (post wishlist triage):**
+
+- Introduce basic Run replay/evaluation to support agent quality.
+- Optional external research tool stays off-by-default with clear labeling/toggles.
+- Keep MCP/API parity via core services layer; avoid duplicate logic.
 
 ---
 

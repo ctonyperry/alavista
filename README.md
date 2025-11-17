@@ -61,9 +61,9 @@ You don’t need to be an ML engineer to use Alavista. If you can run a Docker C
 
 ## Roadmap (Aspirational Highlights)
 
-- v1.0: baseline semantic search, ingestion pipeline, typed graphs, personas, MCP, and API.
+- v1.0: baseline semantic search, ingestion pipeline, typed graphs, personas, MCP, API, and an optional lightweight React UI (Tailwind + Radix + shadcn/ui).
 - v1.x: richer ontology, temporal reasoning, automatic extraction pipelines, advanced graph queries.
-- Future: multimodal ingestion (images → text summaries), collaboration tools, and domain-specific persona packs.
+- Future: multimodal ingestion (images + text summaries), collaboration tools, and domain-specific persona packs.
 
 ## What “A la vista” Means
 
